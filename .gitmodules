@@ -1,0 +1,6 @@
+[submodule "Dolo.jl"]
+	path = Dolo.jl
+	url = https://github.com/EconForge/Dolo.jl.git
+[submodule "NoLib"]
+	path = NoLib
+	url = https://github.com/albop/NoLib.git
