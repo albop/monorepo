@@ -1,0 +1,13 @@
+[deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+DoModel = "656485d5-27c1-456b-a555-12e34a9c9606"
+Dolang = "e5c7262c-e9d2-5620-ad8e-1af14eb8a8e3"
+Dolo = "9d24351c-2990-5e1b-a277-04c4b809c898"
+DoloYAML = "5444aaa2-d204-4231-b785-bc52d56d058b"
+IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+NoLib = "87179f8f-7bad-4647-abf4-d65b80753c8f"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+StringDistances = "88034a9c-02f8-509d-84a9-84ec65e18404"
+YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
