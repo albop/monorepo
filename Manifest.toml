@@ -2,7 +2,7 @@
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "3dbac69eb97dc8f74500bb5a8020e01ce0a45ea9"
+project_hash = "cd1326f3a276ebf91a5ddc79b0032cc0fe829a4e"
 
 [[deps.AMD]]
 deps = ["Libdl", "LinearAlgebra", "SparseArrays", "Test"]
@@ -332,6 +332,12 @@ git-tree-sha1 = "d05d9e7b7aedff4e5b51a029dced05cfb6125781"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.2"
 
+[[deps.CovarianceEstimation]]
+deps = ["LinearAlgebra", "Statistics", "StatsBase"]
+git-tree-sha1 = "6711ad240bb8861dda376bad332d3f89e2ac5f30"
+uuid = "587fd27a-f159-11e8-2dae-1979310e6154"
+version = "0.2.9"
+
 [[deps.CpuId]]
 deps = ["Markdown"]
 git-tree-sha1 = "fcbb72b032692610bfbdb15018ac16a36cf2e406"
@@ -453,7 +459,7 @@ uuid = "9d24351c-2990-5e1b-a277-04c4b809c898"
 version = "0.4.4"
 
 [[deps.DoloYAML]]
-deps = ["DataStructures", "Distributions", "Dolang", "Formatting", "HTTP", "IterTools", "LinearAlgebra", "MacroTools", "Printf", "StaticArrays", "StringDistances", "YAML"]
+deps = ["DataStructures", "Distributions", "Dolang", "Formatting", "HTTP", "IterTools", "LinearAlgebra", "MacroTools", "Printf", "QuantEcon", "StaticArrays", "StringDistances", "YAML"]
 path = "DoloYAML"
 uuid = "5444aaa2-d204-4231-b785-bc52d56d058b"
 version = "0.1.0"
@@ -796,6 +802,12 @@ git-tree-sha1 = "cf9cae1c4c1ff83f6c02cfaf01698f05448e8325"
 uuid = "63c18a36-062a-441e-b654-da1e3ab1ce7c"
 version = "0.8.6"
 
+[[deps.Kronecker]]
+deps = ["LinearAlgebra", "NamedDims", "SparseArrays", "StatsBase"]
+git-tree-sha1 = "bd47e8074c6bd478abf7efa6d504f6c1c38a487c"
+uuid = "2c470bb0-bcc8-11e8-3dad-c9649493f05e"
+version = "0.5.4"
+
 [[deps.KrylovKit]]
 deps = ["ChainRulesCore", "GPUArraysCore", "LinearAlgebra", "Printf"]
 git-tree-sha1 = "1a5e1d9941c783b0119897d29f2eb665d876ecf3"
@@ -1137,12 +1149,18 @@ git-tree-sha1 = "1a0fa0e9613f46c9b8c11eee38ebb4f590013c5e"
 uuid = "71a1bf82-56d0-4bbc-8a3c-48b961074391"
 version = "0.1.5"
 
+[[deps.NamedDims]]
+deps = ["AbstractFFTs", "ChainRulesCore", "CovarianceEstimation", "LinearAlgebra", "Pkg", "Requires", "Statistics"]
+git-tree-sha1 = "cb8ebcee2b4e07b72befb9def593baef8aa12f07"
+uuid = "356022a1-0364-5f58-8944-0da4b18d706f"
+version = "0.2.50"
+
 [[deps.NetworkOptions]]
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
 
 [[deps.NoLib]]
-deps = ["Adapt", "BenchmarkTools", "BlockDiagonals", "CUDAKernels", "Continuables", "Documenter", "FLoops", "FiniteDiff", "FiniteDifferences", "ForwardDiff", "IJulia", "IterTools", "KernelAbstractions", "KrylovKit", "LabelledArrays", "LinearAlgebra", "LinearMaps", "LinearOperators", "LoopVectorization", "NLsolve", "Optim", "Plots", "ProgressLogging", "QuantEcon", "RecipesBase", "ResumableFunctions", "Roots", "SparseArrays", "StaticArrays", "Test"]
+deps = ["Adapt", "BenchmarkTools", "BlockDiagonals", "CUDAKernels", "Continuables", "Documenter", "FLoops", "FiniteDiff", "FiniteDifferences", "ForwardDiff", "IterTools", "KernelAbstractions", "Kronecker", "KrylovKit", "LabelledArrays", "LinearAlgebra", "LinearMaps", "LinearOperators", "LoopVectorization", "NLsolve", "Optim", "Plots", "ProgressLogging", "QuantEcon", "RecipesBase", "ResumableFunctions", "Roots", "SparseArrays", "StaticArrays", "Test"]
 path = "NoLib"
 uuid = "87179f8f-7bad-4647-abf4-d65b80753c8f"
 version = "0.1.0"

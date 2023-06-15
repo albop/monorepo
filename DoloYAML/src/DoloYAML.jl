@@ -7,6 +7,10 @@ import Dolang: SymExpr, list_syms
 
 # model import utils
 using DataStructures: OrderedDict
+
+using LinearAlgebra
+import QuantEcon
+const QE = QuantEcon
 import YAML; using YAML: load_file, load
 
 import IterTools

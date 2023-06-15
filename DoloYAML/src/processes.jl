@@ -1,3 +1,31 @@
+### from QuantEcon
+function rouwenhorst(N::Integer, ρ::Real, σ::Real, μ::Real=0.0)
+    σ_y = σ / sqrt(1-ρ^2)
+    p  = (1+ρ)/2
+    ψ = sqrt(N-1) * σ_y
+    m = μ / (1 - ρ)
+
+    state_values, p = _rouwenhorst(p, p, m, ψ, N)
+    (;P=p, V=state_values)
+end
+
+function _rouwenhorst(p::Real, q::Real, m::Real, Δ::Real, n::Integer)
+    if n == 2
+        return [m-Δ, m+Δ],  [p 1-p; 1-q q]
+    else
+        _, θ_nm1 = _rouwenhorst(p, q, m, Δ, n-1)
+        θN = p    *[θ_nm1 zeros(n-1, 1); zeros(1, n)] +
+             (1-p)*[zeros(n-1, 1) θ_nm1; zeros(1, n)] +
+             q    *[zeros(1, n); zeros(n-1, 1) θ_nm1] +
+             (1-q)*[zeros(1, n); θ_nm1 zeros(n-1, 1)]
+
+        θN[2:end-1, :] ./= 2
+
+        return range(m-Δ, stop=m+Δ, length=n), θN
+    end
+end
+
+
 abstract type AbstractExogenous end
 
 abstract type EmptyProcess <: AbstractExogenous end
@@ -98,8 +126,6 @@ inode(dp::DiscreteMarkovProcess, i::Int, j::Int) = dp.values[j, :]
 node(dp::DiscreteMarkovProcess, i) = dp.values[i, :]
 inode(::Type{Point{d}}, dp::DiscreteMarkovProcess, i::Int, j::Int) where d = SVector{d}(dp.values[j, :]...)
 node(::Type{Point{d}}, dp::DiscreteMarkovProcess, i) where d = SVector{d}( dp.values[i, :] ...)
-
-
 
 
 function MarkovProduct(mc1::DiscreteMarkovProcess, mc2::DiscreteMarkovProcess)
@@ -300,20 +326,20 @@ function discretize(::Type{DiscreteMarkovProcess}, var::VAR1; n::Union{Int, Vect
     σ = var.Σ
 
     if size(var.Σ, 1) == 1
-        mc_qe = QE.rouwenhorst(n, ρ, sqrt(σ[1]))
-        return DiscreteMarkovProcess(mc_qe.p, appenddim(collect(mc_qe.state_values)))
+        P, V = rouwenhorst(n, ρ, sqrt(σ[1]))
+        return DiscreteMarkovProcess(P, Matrix(v'))
     end
 
 
-    L = chol(σ) # σ = L'*L
+    L = cholesky(σ) # σ = L'*L
     if n isa Int
         NN = fill(n, d) # default: same number of nodes in each dimension
     else
         NN = n
     end
 
-    components = [QE.rouwenhorst(N, ρ, 1.0) for N in NN]
-    mc_components = [DiscreteMarkovProcess(mc.p, appenddim(collect(mc.state_values))) for mc in components]
+    components = [rouwenhorst(N, ρ, 1.0) for N in NN]
+    mc_components = [DiscreteMarkovProcess(mc.P,Matrix(mc.V')) for mc in components]
     mc_prod = MarkovProduct(mc_components...)
     mc_prod.values = mc_prod.values*L'
     return mc_prod
