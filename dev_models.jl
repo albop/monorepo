@@ -55,6 +55,16 @@ model_mc = include("rbc_mc.jl")
 model = model_mc
 
 
+s0 = (;loc=(1,SVector(0.0)), val=(;z=-0.1, k=0.0))
+# s0 = (;loc=(1,SVector(0.0)), val=SVector(-0.1,0.0))
+
+# x = rand(model.controls)
+
+
+x = NamedTuple{(:i,)}(0.1)
+
+transition(model, s0, x)
+
 
 import NoLib: Policy
 

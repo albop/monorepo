@@ -2,7 +2,7 @@
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "ef8b1a356201e4246abfe96a5612831e2a22e23b"
+project_hash = "6892b37aa8e4b11e9844cd695f5e2f436cfddb93"
 
 [[deps.AMD]]
 deps = ["Libdl", "LinearAlgebra", "SparseArrays", "Test"]
@@ -427,12 +427,6 @@ version = "0.25.95"
     [deps.Distributions.weakdeps]
     ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
     DensityInterface = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
-
-[[deps.DoModel]]
-deps = ["DoloYAML", "LabelledArrays", "NoLib", "StaticArrays"]
-path = "DoModel"
-uuid = "656485d5-27c1-456b-a555-12e34a9c9606"
-version = "0.1.0"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
