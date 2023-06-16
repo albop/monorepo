@@ -18,11 +18,11 @@ const ADModel = AbstractDModel
 
 include("dolo_model.jl")
 
-struct Model{A,B,C,N} <: AModel
-    calibration::A
-    domain::B
-    transition::C
-end
+# struct Model{A,B,C,N} <: AModel
+#     calibration::A
+#     domain::B
+#     transition::C
+# end
 
 
 
@@ -42,64 +42,53 @@ end
 # end
 
 
-Model(calibration::A, domain::B, exogenous::C; name::Symbol=:anonymous) where A where B where C = Model{A,B,C,name}(calibration, domain, transition)
-name(::Model{A,B,C,N}) where A where B where  C where N = N
+# Model(calibration::A, domain::B, exogenous::C; name::Symbol=:anonymous) where A where B where C = Model{A,B,C,name}(calibration, domain, transition)
+# name(::Model{A,B,C,N}) where A where B where  C where N = N
 
-struct DModel{A,B,C,D,N} <: ADModel
-    calibration::A
-    domain::B
-    grid::C
-    transition::D
-end
+# struct DModel{A,B,C,D,N} <: ADModel
+#     calibration::A
+#     domain::B
+#     grid::C
+#     transition::D
+# end
 
-DModel(calibration::A, domain::B, grid::C, transition::D; name::Symbol=:anonymous) where A where B where C where D = DModel{A,B,C,D,name}(calibration, domain, grid, transition)
+# DModel(calibration::A, domain::B, grid::C, transition::D; name::Symbol=:anonymous) where A where B where C where D = DModel{A,B,C,D,name}(calibration, domain, grid, transition)
 
 # name(::ADModel{A,B,C,D,N}) where A where B where  C where D where N = N
 
-function Base.show(io::IO, m::AModel) 
-    println("Model")
-    println("* name = ", name(m))
-end
+# function Base.show(io::IO, m::AModel) 
+#     println("Model")
+#     println("* name = ", name(m))
+# end
 
-function Base.show(io::IO, m::ADModel) 
-    println("Discretized Model")
-    println("* name = ", name(m))
-end
+# function Base.show(io::IO, m::ADModel) 
+#     println("Discretized Model")
+#     println("* name = ", name(m))
+# end
 
-function recalibrate()
-end
+# function recalibrate()
+# end
 
-# TODO
-import Base.show
-Base.show(io::IO, dmodel::ADModel) = print(io, "DModel(#$(hash(typeof(dmodel))))")
+# # TODO
+# import Base.show
+# Base.show(io::IO, dmodel::ADModel) = print(io, "DModel(#$(hash(typeof(dmodel))))")
 
 
-exo_transition(model::ADModel) = model.transition
+# exo_transition(model::ADModel) = model.transition
 
-import Base: merge
-function merge(a::SLArray, b::SLArray)
-    # TODO: type is incorrect (should correspond to SVector)
-    m = (merge(convert(NamedTuple,a), convert(NamedTuple,b)))
-    return SLVector(m)
-end
 
-function LVectorLike(m0::SLArray{Tuple{d}, T, 1, d, M}, m) where d where T where M
-    tt = eltype(m)
-    TT = SLArray{Tuple{d}, tt, 1, d, M}
-    return TT(m...)
-end
 
 label_GArray(m, g::GArray) = GArray(g.grid, [LVectorLike(m, e) for e in g.data])
 
-function transition(model::ADModel, m, s, x, M, p)
-    m = LVectorLike(model.calibration.m,m)
-    s = LVectorLike(model.calibration.s,s)
-    x = LVectorLike(model.calibration.x,x)
-    M = LVectorLike(model.calibration.m,M)
-    # p = LVectorLike(model.calibration.p,p)
-    S = transition(model,m,s,x,M,p)
-    return SVector(S...)
-end
+# function transition(model::ADModel, m, s, x, M, p)
+#     m = LVectorLike(model.calibration.m,m)
+#     s = LVectorLike(model.calibration.s,s)
+#     x = LVectorLike(model.calibration.x,x)
+#     M = LVectorLike(model.calibration.m,M)
+#     # p = LVectorLike(model.calibration.p,p)
+#     S = transition(model,m,s,x,M,p)
+#     return SVector(S...)
+# end
 
 
 

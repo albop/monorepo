@@ -157,7 +157,7 @@ end
 
 
 function discretize(dom::ProductSpace{D1,D2}; n=ntuple(u->15,ndims(dom))) where D1<:GridSpace where  D2<:CartesianSpace
-    grid_a = SSGrid(dom.spaces[1].points)
+    grid_a = SGrid(dom.spaces[1].points)
     g_b = dom.spaces[2]
     grid_b = CGrid(
         tuple( 

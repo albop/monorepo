@@ -1,5 +1,5 @@
 abstract type AGrid{d} end
-abstract type SGrid{d} <: AGrid{d} end
+abstract type ASGrid{d} <: AGrid{d} end
 
 import Base: eltype, iterate
 
@@ -21,7 +21,7 @@ getindex(g::CGrid{1}, ::Colon) = [SVector(i) for i in range(g.ranges[1]...)]
 
 
 
-struct SSGrid{n,d} <: SGrid{d}
+struct SSGrid{n,d} <: ASGrid{d}
     points::SVector{n,SVector{d, Float64}}
 end
 

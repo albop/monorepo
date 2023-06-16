@@ -46,9 +46,3 @@ function discretize(model::DoloModel{<:MvNormal}) where A where B where C<:MvNor
     grid = discretize(model.states)
     return GModel(model, grid, dist)
 end
-
-# function discretize(model::DoloModel{<:VAR1}) where A where B where C<:VAR1 where D
-#     mc = discretize(model.exogenous)
-#     endo_grid = discretize(model.states)
-#     grid = NoLib.SSGrid(mc.Q) × 
-# end
