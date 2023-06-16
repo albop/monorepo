@@ -2,7 +2,7 @@
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "cd1326f3a276ebf91a5ddc79b0032cc0fe829a4e"
+project_hash = "ef8b1a356201e4246abfe96a5612831e2a22e23b"
 
 [[deps.AMD]]
 deps = ["Libdl", "LinearAlgebra", "SparseArrays", "Test"]
@@ -1160,7 +1160,7 @@ uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
 
 [[deps.NoLib]]
-deps = ["Adapt", "BenchmarkTools", "BlockDiagonals", "CUDAKernels", "Continuables", "Documenter", "FLoops", "FiniteDiff", "FiniteDifferences", "ForwardDiff", "IterTools", "KernelAbstractions", "Kronecker", "KrylovKit", "LabelledArrays", "LinearAlgebra", "LinearMaps", "LinearOperators", "LoopVectorization", "NLsolve", "Optim", "Plots", "ProgressLogging", "QuantEcon", "RecipesBase", "ResumableFunctions", "Roots", "SparseArrays", "StaticArrays", "Test"]
+deps = ["Adapt", "BenchmarkTools", "BlockDiagonals", "CUDAKernels", "Continuables", "Distributions", "Documenter", "FLoops", "FiniteDiff", "FiniteDifferences", "ForwardDiff", "IterTools", "KernelAbstractions", "Kronecker", "KrylovKit", "LabelledArrays", "LinearAlgebra", "LinearMaps", "LinearOperators", "LoopVectorization", "NLsolve", "Optim", "ProgressLogging", "RecipesBase", "ResumableFunctions", "Roots", "SparseArrays", "StaticArrays", "Test"]
 path = "NoLib"
 uuid = "87179f8f-7bad-4647-abf4-d65b80753c8f"
 version = "0.1.0"

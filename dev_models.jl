@@ -1,44 +1,60 @@
 # using DoloYAML
+using NoLib: ×
+using NoLib: transition
 
 using NoLib
 using StaticArrays
 
-model = let 
+model_ar1 = include("rbc_ar1.jl")
+model_iid = include("rbc_iid.jl")
+model_mc = include("rbc_mc.jl")
 
-    name = :rbc
-
-    states = NoLib.CartesianSpace(;
-        :k => ( 0.0, 1.0),
-        :z => (-0.1, 1.0)
-    )
-
-    controls = NoLib.CartesianSpace(;
-        :i => (-Inf, Inf)
-    )
-
-    
-    Σ = @SMatrix [0.9 ;]
-    process = NoLib.MvNormal( (:ϵ,), Σ )
-
-    # calibrate some parameters
-
-    α = 0.3
-    β = 0.9
-    γ = 4.0
-
-    calibration = (;α, β, γ)
-
-    NoLib.DoloModel(name, states, controls, process, calibration)
-
-end;
+@assert isbits(model_ar1)
+@assert isbits(model_iid)
+@assert isbits(model_mc)
 
 
-@assert isbits(model)
+models = [model_ar1, model_iid, model_mc]
+
+for model in models
+    display(model)
+end
+
+
+
+model = model_iid
+
+s = rand(model.states)
+x = rand(model.controls)
+e = rand(model.exogenous)
+
+NoLib.transition(model, s, x, e)
+NoLib.transition(model, s, x)
+
+
+model = model_ar1
+s = rand(model.states)
+x = rand(model.controls)
+
+
+
+
+transition(model, s, x)
+
+
 
 @time NoLib.get_states(model)
 @time NoLib.get_controls(model)
 
-NoLib.discretize(model)
+
+dmodel_ar1 = NoLib.discretize(model_ar1)
+
+
+
+model_mc = include("rbc_mc.jl")
+model = model_mc
+
+
 
 import NoLib: Policy
 
@@ -47,32 +63,6 @@ import NoLib: Policy
 
 (pol::Policy)(s) = (pol.fun(s))
 
-model = let 
-
-    states = NoLib.CartesianSpace(;
-        :k => ( 0.0, 1.0),
-        :z => (-0.1, 1.0)
-    )
-
-    controls = NoLib.CartesianSpace(;
-        :i => (-Inf, Inf)
-    )
-
-    ρ = 0.9 
-    Σ = @SMatrix [0.9 ;]
-    process = NoLib.VAR1( (:ϵ,), ρ, Σ )
-
-    # calibrate some parameters
-
-    α = 0.3
-    β = 0.9
-    γ = 4.0
-
-    calibration = (;α, β, γ)
-
-    NoLib.DoloModel(states, controls, process, calibration)
-
-end
 
 NoLib.discretize(model.exogenous)
 NoLib.discretize(model)
@@ -81,3 +71,8 @@ model.exogenous
 
 mc = NoLib.discretize(model.exogenous)
 
+
+
+
+sn = (:a, :b)
+sv = SVector( 0.2, 40.2 )
