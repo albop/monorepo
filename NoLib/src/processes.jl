@@ -283,6 +283,8 @@ struct MarkovChain{names, P, Q}
     Q::Q
 end
 
+variables(mc::MarkovChain{names}) where names = names
+
 # MarkovChain(names, P, Q) = MarkovChain{names, typeof(P), typeof(Q)}(P,Q)
 
 function MarkovChain(names, P::Matrix, Q::Matrix) 

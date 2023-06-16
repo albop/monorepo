@@ -45,14 +45,52 @@ function transition(model::typeof(model), s::NamedTuple, x::NamedTuple, M::Named
 
 end
 
+State = Any
 
-function transition(model::DoloModel{<:NoLib.MarkovChain}, s::State, x::NamedTuple)
+
+
+function transition(model::NoLib.DoloModel{<:NoLib.MarkovChain}, s::NamedTuple, x::NamedTuple)
     
+    # m = get_exo(model, s)
+    
+    # M___ = rand(model.exogenous, m)
+    # M = NamedTuple{NoLib.variables(model.exogenous)}(M___)
 
+    
+    i = s.loc[1] # i loc
+    v = s.val
+
+    j = 2    
+    # M_v = model.exogenous.Q[j]   # vector of exogenous values
+    M_v = NamedTuple{NoLib.variables(model.exogenous)}(model.exogenous.Q[j] )
+    S_e =  transition(model, v, x, M_v)        # vector of endogenous values
+    
+    S = merge(M_v, S_e)
+
+    return (;loc=(j,SVector(S_e...)),  val=S)
+
+
+end
+
+
+function transition(model::NoLib.DoloModel{<:NoLib.MarkovChain}, s::State, x::SVector)
+    
+    i,v = s.loc # i loc
+    # s = s.val
+
+    j = 2    
+    M_v = model.exogenous.Q[j]   # vector of exogenous values
+
+    print(v,x, M_v)
+    print("#########")
+    S_e =  transition(model, v, x, M_v)        # vector of endogenous values
+    
+    S = merge(M_v, S_e)
+
+    return (;loc=(j,S_e),  val=S)
 
 
 end
 
 
 model
-
