@@ -1,0 +1,21 @@
+---
+title: "Introduction to nonlinear modeling with Dolo"
+format:
+  docx:
+    number-sections: true
+    colorlinks: true
+---
+
+[Dolo](https://www.econforge.org/Dolo.jl/latest/) is a modeling software, meant to describe rational expectations economic models with ocasionnally binding constraints.
+
+During the workshop the participants will learn to:
+
+- define a model using Dolo syntax, including occasionally binding constraints
+- solve a model, simulate and inspect the solution in the Julia environment
+- compute accuracy and contrast several approximation options
+- use value function iteration
+- use first-order conditions and apply several variants of time-iteration algorithms (time-iteration, improved time-iterations, endogenous grid points)
+- compute a market equilibrium with heterogenous agents and simulate its response to an aggregate shock
+- use Dolo's Julia API directly to solve a model with discrete choices
+
+Exposition with alternate between short lectures and hands-on sessions drawing on several economic applications (consumption savings and sudden-stops models, endogenous default, RBC and new-keynesian model with ZLB). Participants are expected to work on their laptops although an online backup option will be provided. Prior experience with Julia is valuable but not stricly required.

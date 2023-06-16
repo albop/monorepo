@@ -1,0 +1,9 @@
+# define F completely
+
+- F(x1, x0)
+- gradient w.r.t. x1
+- gradient w.r.t. x0
+
+- alternative endogenous grid implementation
+
+
