@@ -1,35 +1,92 @@
 
 ### transition function
 
+function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<:NoLib.VAR1} where T<:NamedTuple
 
-function τ(model::ADModel, ss::T, a::SVector) where T<:Tuple
 
-
-    p = model.calibration.p
-    (i,_),(s_) = ss # get current state values
+    (i,_) = ss.loc
+    s_ = ss.val
+    
 
     # TODO: replace following block by one nonallocating function
 
-    m,s = split_states(model, s_)
+    # m,s = NoLib.split_states(dmodel.model, s_)
 
-    Q = model.grid.g1.points
-
-    P = model.transition
+    Q = dmodel.dproc.Q
+    P = dmodel.dproc.P
 
     it = (
         (
             P[i,j],
-            (
-                (j,),
-                (
-                    SVector(
-                        Q[j]...,
-                        transition(model, m, s, a, Q[j], p)...
-                    )
-                )
-            )
+            let 
+                S_exo = Q[j]
+                S_endo = SVector(transition(dmodel.model, s_, a, Q[j])...)
+                S = SVector(S_exo..., S_endo...)
+                (loc=(j,S_endo),val=S)
+            end
         )
         for j in 1:size(P, 2)
+    )
+
+    it
+
+end
+
+
+function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<:NoLib.MarkovChain} where T<:NamedTuple
+
+
+    (i,_) = ss.loc
+    s_ = ss.val
+    
+
+    # TODO: replace following block by one nonallocating function
+
+    # m,s = NoLib.split_states(dmodel.model, s_)
+
+    Q = dmodel.dproc.Q
+    P = dmodel.dproc.P
+
+    it = (
+        (
+            P[i,j],
+            let 
+                S_exo = Q[j]
+                S_endo = SVector(transition(dmodel.model, s_, a, Q[j])...)
+                S = SVector(S_exo..., S_endo...)
+                (loc=(j,S_endo),val=S)
+            end
+        )
+        for j in 1:size(P, 2)
+    )
+
+    it
+
+end
+
+function τ(dmodel::NoLib.DYModel{M, G, D}, ss::T, a::SVector) where M where G where D<:NamedTuple{(:x,:w)} where T<:NamedTuple
+
+    (i,_) = ss.loc
+    s_ = ss.val
+    
+
+    # TODO: replace following block by one nonallocating function
+
+    # m,s = NoLib.split_states(dmodel.model, s_)
+
+    x = dmodel.dproc.x
+    w = dmodel.dproc.w
+
+    it = (
+        (
+            let 
+                # S_exo = Q[j]
+                S = transition(dmodel.model, s_, a, x[j])
+                
+                (loc=S,val=S)
+            end
+        )
+        for j in 1:length(w)
     )
 
     it

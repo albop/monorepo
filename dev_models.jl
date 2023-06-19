@@ -1,6 +1,8 @@
 # using DoloYAML
 using NoLib: ×
-using NoLib: transition
+using NoLib: transition, arbitrage
+import NoLib: transition
+import NoLib: arbitrage
 
 using NoLib
 using StaticArrays
@@ -20,39 +22,97 @@ for model in models
     display(model)
 end
 
-
+#######
+# iid #
+#######
 
 model = model_iid
 
 s = rand(model.states)
 x = rand(model.controls)
-e = rand(model.exogenous)
 
-NoLib.transition(model, s, x, e)
-NoLib.transition(model, s, x)
+# e = rand(model.exogenous)
+
+NoLib.transition(model, s, x)   # basic transition function
+
+dmodel = NoLib.discretize(model)
+
+res = NoLib.τ(dmodel, s, x.val)
+
+[res...]
 
 
-model = model_ar1
+
+# for i in dmodel.grid
+#     println(i)
+# end
+
+# for i in NoLib.enum(dmodel.grid)
+#     println(i)
+# end
+
+
+
+#######
+# ar1 #
+#######
+
+model = include("rbc_ar1.jl")
+
 s = rand(model.states)
 x = rand(model.controls)
 
-
-
-
 transition(model, s, x)
+NoLib.arbitrage(model,s,x,s,x)
+
+# do I need a special locator type?
+
+dmodel =  NoLib.discretize(model_ar1)
+
+s0 = (;
+    loc = (1, SVector(s.val[1])),
+    val = s.val
+)
+
+res = NoLib.τ(dmodel, s0, x.val)
+
+[res...]
 
 
 
-@time NoLib.get_states(model)
-@time NoLib.get_controls(model)
+#######
+# mc  #
+#######
+
+model = include("rbc_mc.jl")
+
+s = rand(model.states)
+x = rand(model.controls)
+
+S = transition(model, s, x);
+
+dmodel = NoLib.discretize(model)
+
+res = NoLib.τ(dmodel, s, x.val)
+
+[res...]
 
 
-dmodel_ar1 = NoLib.discretize(model_ar1)
+NoLib.arbitrage(model,s,x,s,x)
+
+
+function test(dmodel, s, x)
+
+    sum( w*S for (w,(_,S)) in NoLib.τ(dmodel, s, x.val) )
+
+end
+
+@time test(dmodel, s, x)
 
 
 
-model_mc = include("rbc_mc.jl")
-model = model_mc
+
+
 
 
 s0 = (;loc=(1,SVector(0.0)), val=(;z=-0.1, k=0.0))
