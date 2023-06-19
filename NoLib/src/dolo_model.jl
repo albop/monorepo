@@ -11,6 +11,7 @@ YModel(N,A,B,C,D) = YModel{typeof(C),typeof(A),typeof(B),typeof(D),N}(A,B,C,D)
 name(::YModel{C,A,B,D,N}) where C where A where B where D where N = N
 
 
+
 get_states(model::YModel) = variables(model.states)
 get_controls(model::YModel) = variables(model.controls)
 # get_endo_states(model::Dolo)
@@ -39,23 +40,25 @@ struct DYModel{M, G, D} <: ADModel
     dproc::D
 end
 
-function discretize(model::YModel{<:MvNormal}) where A where B where C<:MvNormal where D
+name(dm::DYModel) = name(dm.model)
+
+function discretize(model::YModel{<:MvNormal})
     dist = discretize(model.exogenous)
     grid = discretize(model.states)
     return DYModel(model, grid, dist)
 end
 
-function discretize(model::YModel{<:VAR1}) where A where B where C<:VAR1 where D
+function discretize(model::YModel{<:VAR1})
     dvar = discretize(model.exogenous)
-    exo_grid = SSGrid(dvar.Q)
+    exo_grid = SGrid(dvar.Q)
     endo_grid = discretize(model.states)
     grid = exo_grid × endo_grid
     return DYModel(model, grid, dvar)
 end
 
-function discretize(model::YModel{<:MarkovChain}) where A where B where C<:VAR1 where D
+function discretize(model::YModel{<:MarkovChain})
     dvar = (model.exogenous)
-    exo_grid = SSGrid(dvar.Q)
+    exo_grid = SGrid(dvar.Q)
     endo_grid = discretize(model.states.spaces[2])
     grid = exo_grid × endo_grid
     return DYModel(model, grid, dvar)

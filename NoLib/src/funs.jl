@@ -6,13 +6,14 @@
 # abstract type Policy{From, To} end
 
 
-struct Policy{From, To}
+struct Policy{From, To, Fun}
     from::From
     to::To
-    fun::Function
+    fun::Fun
 end
 
-
+(pol::Policy)(s::QP) = pol.fun(s)
+(pol::Policy)(s) = pol.fun(s)
 
 
 using .splines

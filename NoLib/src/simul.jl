@@ -1,7 +1,7 @@
 
 ### transition function
 
-function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<:NoLib.VAR1} where T<:NamedTuple
+function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<:NoLib.VAR1} where T<:QP
 
 
     (i,_) = ss.loc
@@ -22,7 +22,8 @@ function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<
                 S_exo = Q[j]
                 S_endo = SVector(transition(dmodel.model, s_, a, Q[j])...)
                 S = SVector(S_exo..., S_endo...)
-                (loc=(j,S_endo),val=S)
+                QP((j,S_endo),S)
+                # (loc=(j,S_endo),val=S)
             end
         )
         for j in 1:size(P, 2)
@@ -33,7 +34,7 @@ function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<
 end
 
 
-function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<:NoLib.MarkovChain} where T<:NamedTuple
+function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<:NoLib.MarkovChain} where T<:QP
 
 
     (i,_) = ss.loc
@@ -54,7 +55,8 @@ function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<
                 S_exo = Q[j]
                 S_endo = SVector(transition(dmodel.model, s_, a, Q[j])...)
                 S = SVector(S_exo..., S_endo...)
-                (loc=(j,S_endo),val=S)
+                QP((j,S_endo),S)
+                # (loc=(j,S_endo),val=S)
             end
         )
         for j in 1:size(P, 2)
@@ -64,7 +66,8 @@ function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<
 
 end
 
-function τ(dmodel::NoLib.DYModel{M, G, D}, ss::T, a::SVector) where M where G where D<:NamedTuple{(:x,:w)} where T<:NamedTuple
+function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector)  where M<:NoLib.YModel{<:NoLib.MvNormal} where T<:QP
+
 
     (i,_) = ss.loc
     s_ = ss.val
@@ -79,11 +82,12 @@ function τ(dmodel::NoLib.DYModel{M, G, D}, ss::T, a::SVector) where M where G w
 
     it = (
         (
+            w[j],
             let 
                 # S_exo = Q[j]
                 S = transition(dmodel.model, s_, a, x[j])
-                
-                (loc=S,val=S)
+                QP(S,S)
+                # (loc=S,val=S)
             end
         )
         for j in 1:length(w)

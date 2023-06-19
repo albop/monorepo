@@ -221,14 +221,14 @@ function rand(var::VAR1{N,V,B}, m::SVector{d,Float64}) where N where V where B<:
 
 end
 
-function rand(var::VAR1, m0::SVector{d,Float64}) where N where V where d
+function rand(var::VAR1, m0::SVector{d,Float64})
     dis = Distributions.MvNormal(Matrix(var.Σ))
     m = ρ*m0 + rand(dis)
     SVector(m...)
 end
 
 
-function rand(var::VAR1, m0::NamedTuple) where N where V where d
+function rand(var::VAR1, m0::NamedTuple)
     v = rand(var, SVector(m0...))
     return NamedTuple{variables(var)}(v)
 end

@@ -15,7 +15,8 @@ model = let
         )
     )
     controls = NoLib.CartesianSpace(;
-        :i => (0, 10)
+        :i => (0.0, 10.0),
+        :n => (0.0, 1.5)
     )
 
     # calibrate some parameters
@@ -27,8 +28,10 @@ model = let
     δ = 0.1
     
     ρ = 0.9
+    χ = 0.5
+    n = 0.8
 
-    calibration = (;α, β, γ, δ, ρ)
+    calibration = (;α, β, γ, δ, ρ,χ, n, η = 2.0, σ = 2.0)
 
 
     NoLib.YModel(name, states, controls, process, calibration)

@@ -28,6 +28,14 @@ module NoLib
     end
 
 
+    struct QP{A,B}
+        loc::A
+        val::B
+    end
+
+    import Base: show
+    
+    show(io::IO, x::QP) = print(io,"QP(;loc=$(x.loc), val=$(x.val))")
     
     macro I(v)
         :(($v).index)

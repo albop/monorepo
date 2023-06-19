@@ -10,9 +10,9 @@ model = let
     )
 
     controls = NoLib.CartesianSpace(;
-        :i => (0.0, 10.0)
+        :i => (0.0, 10.0),
+        :n => (0.0, 1.5)
     )
-
     
     Σ = @SMatrix [0.9 ;]
     process = NoLib.MvNormal( (:ϵ,), Σ )
@@ -28,8 +28,11 @@ model = let
     δ = 0.1
     
     ρ = 0.9
+    n = 0.
+    χ = 0.5
 
-    calibration = (;α, β, γ, δ, ρ)
+
+    calibration = (;α, β, γ, δ, ρ, n, χ, η = 2.0, σ=2.0)
 
     NoLib.YModel(name, states, controls, process, calibration)
 
@@ -61,7 +64,7 @@ function intermediate(model::typeof(model),s::NamedTuple, x::NamedTuple)
 end
 
 
-function arbitrage(model::typeof(model), m::NamedTuple, s::NamedTuple, x::NamedTuple, M::NamedTuple, S::NamedTuple, X::NamedTuple)
+function arbitrage(model::typeof(model), s::NamedTuple, x::NamedTuple,  S::NamedTuple, X::NamedTuple)
 
     p = model.calibration
 

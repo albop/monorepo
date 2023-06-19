@@ -26,7 +26,8 @@ import Base: rand, in
 function Base.rand(cs::CartesianSpace) 
     loc = SVector(( (cs.min[i] + rand()*(cs.max[i]-cs.min[i])) for i=1:length(cs.min) )...)
     val = loc
-    (;loc, val)
+    QP(loc,val)
+    # (;loc, val)
 end
 
 Base.in(e::SVector, cs) = all( ( (e[i]<=cs.max[i])&(e[i]>=cs.min[i]) for i=1:length(cs.min) ) )
@@ -50,7 +51,8 @@ GridSpace(names, v::SVector{k, SVector{d, Float64}}) where k where d = GridSpace
 function rand(g::GridSpace) 
     i =  rand(1:length(g.points))   # loc
     v = g.points[i]                 # val
-    (;loc=i,val=v)
+    QP(i,v)
+    # (;loc=i,val=v)
 end
 
 ndims(gd::GridSpace{N,d,dims}) where N where d where dims = d
@@ -68,7 +70,11 @@ ProductSpace(A,B) = ProductSpace((A,B))
 function rand(p::ProductSpace)
     a = rand(p.spaces[1])
     b = rand(p.spaces[2])
-    (;loc=(a.loc,b.loc),val=SVector(a.val...,b.val...))
+    QP(
+        (a.loc,b.loc),
+        SVector(a.val...,b.val...)
+    )
+    # (;loc=(a.loc,b.loc),val=SVector(a.val...,b.val...))
 end
 
 variables(p::ProductSpace) = dims(p)

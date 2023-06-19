@@ -21,17 +21,17 @@ getindex(g::CGrid{1}, ::Colon) = [SVector(i) for i in range(g.ranges[1]...)]
 
 
 
-struct SSGrid{n,d} <: ASGrid{d}
+struct SGrid{n,d} <: ASGrid{d}
     points::SVector{n,SVector{d, Float64}}
 end
 
-function SSGrid(Q::Matrix)
+function SGrid(Q::Matrix)
     d = size(Q,2)
-    return SSGrid{d}([SVector(Q[i,:]...) for i=1:size(Q,1)])
+    return SGrid{d}([SVector(Q[i,:]...) for i=1:size(Q,1)])
 end
 
-function SSGrid(v::Vector)
-    return SSGrid(SVector(v...))
+function SGrid(v::Vector)
+    return SGrid(SVector(v...))
 end
 
 

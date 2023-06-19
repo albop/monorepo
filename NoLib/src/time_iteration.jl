@@ -1,4 +1,12 @@
-F(model, s, x::SVector, φ::DFun) = 
+function F(model, s, x::SVector, φ::Policy)
+    tot = 0.0
+    for (w,S) in τ(model, s, x)
+        X = φ(S)
+        w*arbitrage(model,s,x,S,X) 
+    end
+end
+
+F(model, s, x::SVector, φ::Policy) = 
     sum(
          w*arbitrage(model,s,x,S,φ(S)) 
          for (w,S) in τ(model, s, x)

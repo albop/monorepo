@@ -34,6 +34,7 @@ x = rand(model.controls)
 # e = rand(model.exogenous)
 
 NoLib.transition(model, s, x)   # basic transition function
+NoLib.arbitrage(model,s,x,s,x)
 
 dmodel = NoLib.discretize(model)
 
@@ -41,7 +42,29 @@ res = NoLib.τ(dmodel, s, x.val)
 
 [res...]
 
+φ = NoLib.Policy(
+    model.states,
+    model.controls,
+    u->x.val
+)
 
+
+@time NoLib.F(dmodel, s, x.val, φ)
+
+using NoLib.ForwardDiff
+
+function test(dmodel, s, x)
+    φ = NoLib.Policy(
+        model.states,
+        model.controls,
+        u->x.val
+    )
+    res = ForwardDiff.jacobian(u->NoLib.F(dmodel, s, u, φ), x.val)
+    sum(sum(res))
+end
+
+
+@time test(dmodel, s, x, φ)
 
 # for i in dmodel.grid
 #     println(i)
@@ -69,14 +92,24 @@ NoLib.arbitrage(model,s,x,s,x)
 
 dmodel =  NoLib.discretize(model_ar1)
 
-s0 = (;
-    loc = (1, SVector(s.val[1])),
-    val = s.val
+s0 = NoLib.QP(
+    (1, SVector(s.val[1])),
+    s.val
 )
 
 res = NoLib.τ(dmodel, s0, x.val)
 
 [res...]
+
+
+φ = NoLib.Policy(
+    model.states,
+    model.controls,
+    u->x.val
+)
+
+
+NoLib.F(dmodel, s, x.val, φ)
 
 
 
@@ -92,6 +125,7 @@ x = rand(model.controls)
 S = transition(model, s, x);
 
 dmodel = NoLib.discretize(model)
+
 
 res = NoLib.τ(dmodel, s, x.val)
 
@@ -113,7 +147,7 @@ end
 
 
 
-
+s0 = QP( (1,SVector(0.0)), (;z=-0.1, k=0.0))
 
 s0 = (;loc=(1,SVector(0.0)), val=(;z=-0.1, k=0.0))
 # s0 = (;loc=(1,SVector(0.0)), val=SVector(-0.1,0.0))

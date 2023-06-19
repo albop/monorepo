@@ -7,7 +7,9 @@ function arbitrage(model::YModel, s::SVector, x::SVector, S::SVector, X::SVector
     return SVector(res...)
 end
 
-function arbitrage(model::YModel, s::NamedTuple{(:loc,:val)}, x::NamedTuple{(:loc,:val)}, S::NamedTuple{(:loc,:val)}, X::NamedTuple{(:loc,:val)})
+arbitrage(dmodel::DYModel, s::QP,x::SVector, S::QP,X::SVector) = arbitrage(dmodel.model, s.val, x, S.val, X)
+
+function arbitrage(model::YModel, s::QP, x::QP, S::QP, X::QP)
     arbitrage(model, s.val, x.val, S.val, X.val)
 end
 
@@ -40,7 +42,7 @@ function transition(model::YModel{<:MvNormal}, s::SVector, x::SVector)
 end
 
 
-function transition(model::YModel{<:MvNormal}, s::NamedTuple, x::NamedTuple)
+function transition(model::YModel{<:MvNormal}, s::QP, x::QP)
     
     ss = s.val
     xx = x.val
@@ -82,7 +84,8 @@ function transition(model::YModel{<:MarkovChain}, s::NamedTuple, xx::NamedTuple)
     
     S = merge(M_v, S_e)
 
-    return (;loc=(j,SVector(S_e...)),  val=S)
+    # return (;loc=(j,SVector(S_e...)),  val=S)
+    return QP((j,SVector(S_e...)), S)
 
 
 end
@@ -100,7 +103,7 @@ function transition(model::YModel{<:MarkovChain}, s::NamedTuple, x::SVector)
     
     S = merge(M_v, S_e)
 
-    return (;loc=(j,S_e),  val=S)
+    return QP((j,S_e), S)
 
 
 end
@@ -139,13 +142,13 @@ function transition(model::YModel{<:VAR1}, s::NamedTuple, x::NamedTuple)
 
 end
 
-function transition(model::YModel{<:VAR1}, s::NamedTuple{(:loc,:val)}, x::NamedTuple{(:loc,:val)})
+function transition(model::YModel{<:VAR1}, s::QP, x::QP)
     
     ss = NamedTuple{variables(model.states)}(s.val)
     xx = NamedTuple{variables(model.controls)}(x.val)
     SS = transition(model, ss, xx)
     S = SVector(SS...)
-    (;loc=S, val=S)
+    QP(S, S)
 
 end
 
