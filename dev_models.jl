@@ -59,12 +59,14 @@ function test(dmodel, s, x)
         model.controls,
         u->x.val
     )
-    res = ForwardDiff.jacobian(u->NoLib.F(dmodel, s, u, φ), x.val)
-    sum(sum(res))
+    # res = ForwardDiff.jacobian(u->NoLib.F(dmodel, s, u, φ), x.val)
+    # sum(sum(res))
+    res = NoLib.F(dmodel, s, x.val, φ)
+    (sum(res))
 end
 
 
-@time test(dmodel, s, x, φ)
+@time test(dmodel, s, x)
 
 # for i in dmodel.grid
 #     println(i)
@@ -92,6 +94,8 @@ NoLib.arbitrage(model,s,x,s,x)
 
 dmodel =  NoLib.discretize(model_ar1)
 
+
+# initial point on the grid
 s0 = NoLib.QP(
     (1, SVector(s.val[1])),
     s.val
@@ -109,7 +113,7 @@ res = NoLib.τ(dmodel, s0, x.val)
 )
 
 
-NoLib.F(dmodel, s, x.val, φ)
+NoLib.F(dmodel, s0, x.val, φ)
 
 
 
@@ -123,60 +127,30 @@ s = rand(model.states)
 x = rand(model.controls)
 
 S = transition(model, s, x);
+NoLib.arbitrage(model,s,x,s,x)
 
 dmodel = NoLib.discretize(model)
 
 
-res = NoLib.τ(dmodel, s, x.val)
+
+# initial point on the grid
+s0 = NoLib.QP(
+    (1, SVector(s.val[1])),
+    s.val
+    )
+    
+res = NoLib.τ(dmodel, s0, x.val)
 
 [res...]
 
 
-NoLib.arbitrage(model,s,x,s,x)
+φ = NoLib.Policy(
+    model.states,
+    model.controls,
+    u->x.val
+)
+
+s0 = NoLib.QP( (1,SVector(0.0)), SVector(-0.1, 0.0))
 
 
-function test(dmodel, s, x)
-
-    sum( w*S for (w,(_,S)) in NoLib.τ(dmodel, s, x.val) )
-
-end
-
-@time test(dmodel, s, x)
-
-
-
-
-
-s0 = QP( (1,SVector(0.0)), (;z=-0.1, k=0.0))
-
-s0 = (;loc=(1,SVector(0.0)), val=(;z=-0.1, k=0.0))
-# s0 = (;loc=(1,SVector(0.0)), val=SVector(-0.1,0.0))
-
-# x = rand(model.controls)
-
-
-x = NamedTuple{(:i,)}(0.1)
-
-transition(model, s0, x)
-
-
-import NoLib: Policy
-
-
-φ = Policy(model.states, model.controls, x->SVector(x[1], x[1]-x[2]))
-
-(pol::Policy)(s) = (pol.fun(s))
-
-
-NoLib.discretize(model.exogenous)
-NoLib.discretize(model)
-
-model.exogenous
-
-mc = NoLib.discretize(model.exogenous)
-
-
-
-
-sn = (:a, :b)
-sv = SVector( 0.2, 40.2 )
+@time NoLib.F(dmodel, s0, x.val, φ)

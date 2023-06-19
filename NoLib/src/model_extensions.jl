@@ -64,7 +64,7 @@ function transition(model::YModel{<:MarkovChain}, s::SVector, x::SVector, M::SVe
 end
 
 
-function transition(model::YModel{<:MarkovChain}, s::NamedTuple, xx::NamedTuple)
+function transition(model::YModel{<:MarkovChain}, s::QP, xx::QP)
     
     # m = get_exo(model, s)
     

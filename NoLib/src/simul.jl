@@ -34,7 +34,7 @@ function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<
 end
 
 
-function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<:NoLib.MarkovChain} where T<:QP
+function τ(dmodel::NoLib.DYModel{M}, ss::QP, a::SVector) where M<:NoLib.YModel{<:NoLib.MarkovChain}
 
 
     (i,_) = ss.loc
