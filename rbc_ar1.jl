@@ -38,7 +38,7 @@ model = let
 
     calibration = (;α, β, γ, δ, ρ)
 
-    NoLib.DoloModel(name, states, controls, process, calibration)
+    NoLib.YModel(name, states, controls, process, calibration)
 
 end
 
@@ -56,49 +56,31 @@ function transition(model::typeof(model), s::NamedTuple, x::NamedTuple, M::Named
 
 end
 
-
-# extracts name of exogenous states
-
-function get_exo(model, s::NamedTuple)
-    exonames = NoLib.variables(model.exogenous)
-    vals = tuple( (getfield(s, n) for n in exonames)... )
-    return NamedTuple{exonames}(vals)
-end
-
-function get_exo(model, s::SVector)
-    snames = NoLib.variables(model.states)
-    vals = get_exo(model, NamedTuple{snames}(s))
-    return SVector(vals...)
-end
-
-
-function transition(model::NoLib.DoloModel{<:NoLib.VAR1}, s::NamedTuple, x::NamedTuple)
+function intermediate(model::typeof(model),s::NamedTuple, x::NamedTuple)
     
-    m = get_exo(model, s)
+    p = model.calibration
+
+	y = exp(s.z)*(s.k^p.α)*(x.n^(1-p.α))
+	w = (1-p.α)*y/x.n
+	rk = p.α*y/s.k
+	c = y - x.i
+	return ( (; y, c, rk, w))
+
+end
+
+
+function arbitrage(model::typeof(model),s::NamedTuple, x::NamedTuple, S::NamedTuple, X::NamedTuple)
+
+    p = model.calibration
+
+	y = intermediate(model, s, x)
+	Y = intermediate(model, S, X)
+	res_1 = p.χ*(x.n^p.η)*(y.c^p.σ) - y.w
+	res_2 = (p.β*(y.c/Y.c)^p.σ)*(1 - p.δ + Y.rk) - 1
     
-    M = rand(model.exogenous, m)
-    S_ = transition(model, s, x, M)
-
-    S = merge(M, S_)
-
-    return S
+    return ( (;res_1, res_2) )
 
 end
 
-
-
-function transition(model::NoLib.DoloModel{<:NoLib.VAR1}, ss::SVector, xx::SVector)
-    
-    _s = NoLib.variables(model.states)
-    _x = NoLib.variables(model.controls)
-
-    s = NamedTuple{_s}(ss)
-    x = NamedTuple{_x}(xx)
-
-    res = transition(model, s, x)
-
-    SVector(res...)
-
-end
 
 model

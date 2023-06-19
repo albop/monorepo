@@ -31,7 +31,7 @@ model = let
 
     calibration = (;α, β, γ, δ, ρ)
 
-    NoLib.DoloModel(name, states, controls, process, calibration)
+    NoLib.YModel(name, states, controls, process, calibration)
 
 end;
 
@@ -48,31 +48,36 @@ function transition(model::typeof(model), s::NamedTuple, x::NamedTuple, e::Named
 end
 
 
-function transition(model::NoLib.DoloModel{<:NoLib.MvNormal}, ss::SVector, xx::SVector, ee::SVector)
+function intermediate(model::typeof(model),s::NamedTuple, x::NamedTuple)
     
-    _s = NoLib.variables(model.states)
-    _x = NoLib.variables(model.controls)
-    _e = NoLib.variables(model.exogenous)
+    p = model.calibration
 
-    s = NamedTuple{_s}(ss)
-    x = NamedTuple{_x}(xx)
-    e = NamedTuple{_e}(ee)
-
-    res = transition(model, s, x, e)
-
-    SVector(res...)
+	y = exp(s.z)*(s.k^p.α)*(x.n^(1-p.α))
+	w = (1-p.α)*y/x.n
+	rk = p.α*y/s.k
+	c = y - x.i
+	return ( (; y, c, rk, w))
 
 end
 
-function transition(model::NoLib.DoloModel{<:NoLib.MvNormal}, s::SVector, x::SVector)
+
+function arbitrage(model::typeof(model), m::NamedTuple, s::NamedTuple, x::NamedTuple, M::NamedTuple, S::NamedTuple, X::NamedTuple)
+
+    p = model.calibration
+
+	y = intermediate(model, s, x)
+	Y = intermediate(model, S, X)
+	res_1 = p.χ*(x.n^p.η)*(y.c^p.σ) - y.w
+	res_2 = (p.β*(y.c/Y.c)^p.σ)*(1 - p.δ + Y.rk) - 1
     
-    transition(model, s, x, rand(model.exogenous))
+    return ( (;res_1, res_2) )
 
 end
+
 
 model
 
-# function simulate(model::NoLib.DoloModel{:NoLib.MvNormal}, s::SVector, φ; T=100)
+# function simulate(model::NoLib.YModel{:NoLib.MvNormal}, s::SVector, φ; T=100)
 #     sim = [s]
 #     for t=1:T
 #         s = simulate(model, s, φ(s))

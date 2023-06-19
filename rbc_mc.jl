@@ -1,3 +1,4 @@
+import NoLib: transition
 
 model = let 
 
@@ -14,7 +15,7 @@ model = let
         )
     )
     controls = NoLib.CartesianSpace(;
-        :i => (-Inf, Inf)
+        :i => (0, 10)
     )
 
     # calibrate some parameters
@@ -30,11 +31,11 @@ model = let
     calibration = (;α, β, γ, δ, ρ)
 
 
-    NoLib.DoloModel(name, states, controls, process, calibration)
+    NoLib.YModel(name, states, controls, process, calibration)
 
 end
 
-function transition(model::typeof(model), s::NamedTuple, x::NamedTuple, M::NamedTuple)
+function NoLib.transition(model::typeof(model), s::NamedTuple, x::NamedTuple, M::NamedTuple)
     
     (;δ, ρ) = model.calibration
     
@@ -45,52 +46,34 @@ function transition(model::typeof(model), s::NamedTuple, x::NamedTuple, M::Named
 
 end
 
-State = Any
 
 
-
-function transition(model::NoLib.DoloModel{<:NoLib.MarkovChain}, s::NamedTuple, x::NamedTuple)
+function intermediate(model::typeof(model),s::NamedTuple, x::NamedTuple)
     
-    # m = get_exo(model, s)
-    
-    # M___ = rand(model.exogenous, m)
-    # M = NamedTuple{NoLib.variables(model.exogenous)}(M___)
+    p = model.calibration
 
-    
-    i = s.loc[1] # i loc
-    v = s.val
-
-    j = 2    
-    # M_v = model.exogenous.Q[j]   # vector of exogenous values
-    M_v = NamedTuple{NoLib.variables(model.exogenous)}(model.exogenous.Q[j] )
-    S_e =  transition(model, v, x, M_v)        # vector of endogenous values
-    
-    S = merge(M_v, S_e)
-
-    return (;loc=(j,SVector(S_e...)),  val=S)
-
+	y = exp(s.z)*(s.k^p.α)*(x.n^(1-p.α))
+	w = (1-p.α)*y/x.n
+	rk = p.α*y/s.k
+	c = y - x.i
+	return ( (; y, c, rk, w))
 
 end
 
 
-function transition(model::NoLib.DoloModel{<:NoLib.MarkovChain}, s::State, x::SVector)
+function arbitrage(model::typeof(model), s::NamedTuple, x::NamedTuple, S::NamedTuple, X::NamedTuple)
+
+    p = model.calibration
+
+	y = intermediate(model, s, x)
+	Y = intermediate(model, S, X)
+	res_1 = p.χ*(x.n^p.η)*(y.c^p.σ) - y.w
+	res_2 = (p.β*(y.c/Y.c)^p.σ)*(1 - p.δ + Y.rk) - 1
     
-    i,v = s.loc # i loc
-    # s = s.val
-
-    j = 2    
-    M_v = model.exogenous.Q[j]   # vector of exogenous values
-
-    print(v,x, M_v)
-    print("#########")
-    S_e =  transition(model, v, x, M_v)        # vector of endogenous values
-    
-    S = merge(M_v, S_e)
-
-    return (;loc=(j,S_e),  val=S)
-
+    return ( (;res_1, res_2) )
 
 end
+
 
 
 model

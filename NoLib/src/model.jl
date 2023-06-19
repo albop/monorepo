@@ -91,17 +91,7 @@ end
 
 label_GArray(m, g::GArray) = GArray(g.grid, [LVectorLike(m, e) for e in g.data])
 
-function transition(model::ADModel, m, s, x, M, p)
-    m = LVectorLike(model.calibration.m,m)
-    s = LVectorLike(model.calibration.s,s)
-    x = LVectorLike(model.calibration.x,x)
-    M = LVectorLike(model.calibration.m,M)
-    # p = LVectorLike(model.calibration.p,p)
-    S = transition(model,m,s,x,M,p)
-    return SVector(S...)
-end
-
-
+include("model_extensions.jl")
 
 function arbitrage(model::ADModel, m, s, x, M, S, X, p)
     m = LVectorLike(model.calibration.m, m)  # this does not keep the original type
@@ -131,10 +121,10 @@ function split_states(model::ADModel, S::Tuple{ind, v}) where ind where v<:SVect
     split_states(model, S[2])
 end
 
-function split_states(model::ADModel, s_)
+function split_states(model::AModel, s_)
 
-    n_m = length(model.calibration.m)  # this does not keep the original type
-    n_s = length(model.calibration.s)
+    n_m = ndims(model.exogenous)  # this does not keep the original type
+    n_s = ndims(model.states) - n_m
 
     m = SVector((s_[i] for i=1:n_m)...)
     s = SVector((s_[i] for i=n_m+1:(n_m+n_s))...)

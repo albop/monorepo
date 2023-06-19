@@ -202,7 +202,7 @@ function discretize(mv::MvNormal; n=5)
     μ = zeros(size(mv.Σ,1))
     x, w = qnwnorm(nn, μ, Matrix(mv.Σ))
     
-    xm = SVector((x[i,:] for i=1:n)...)
+    xm = SVector((SVector(x[i,:]...) for i=1:n)...)
     (;x=xm,w=SVector(w...))
 end
 
@@ -252,7 +252,11 @@ function discretize(var::VAR1; n=3)
 
     if size(var.Σ, 1) == 1
         (;P, V) = rouwenhorst(n, ρ, sqrt(var.Σ[1,1]))
-        return MarkovChain(names, P, Matrix(V'))
+        mat = Matrix( Matrix(V')' )
+        println("Matrix")
+        println(mat)
+        println(typeof(mat))
+        return MarkovChain(names, P,mat)
     end
 
 
@@ -278,23 +282,26 @@ function discretize(var::VAR1; n=3)
 
 end
 
-struct MarkovChain{names, P, Q}
-    P::P
-    Q::Q
+struct MarkovChain{names, d, d2, k}
+    P::SMatrix{d,d,Float64,d2}
+    Q::SVector{d, SVector{k, Float64}}
 end
 
 variables(mc::MarkovChain{names}) where names = names
+ndims(mc::MarkovChain{names}) where names = length(names)
 
 # MarkovChain(names, P, Q) = MarkovChain{names, typeof(P), typeof(Q)}(P,Q)
 
 function MarkovChain(names, P::Matrix, Q::Matrix) 
     d = size(P,1)
     sm = SMatrix{d,d,Float64,d*d}(P)
-    sv = SVector( ( SVector(Q[i,:]...) for i in 1:size(Q,1))...  )
-    MarkovChain{names, typeof(sm), typeof(sv)}(sm,sv)
+    sv = SVector( tuple( ( SVector(Q[i,:]...) for i in 1:size(Q,1))...)  )
+    @show sm
+    @show sv
+    MarkovChain{names,d,d^2,length(sv[1])}(sm,sv)
 end
 
-MarkovChain(names, P::SMatrix, Q::SVector) = MarkovChain{names, typeof(P), typeof(Q)}(P, Q) # TODO: specify type arguments
+MarkovChain(names, P::SMatrix, Q::SVector{d,SVector{k,Float64}}) where d where k = MarkovChain{names, size(P,1), length(P), length(Q[1])}(P, Q) # TODO: specify type arguments
 
 MarkovProduct(mc::MarkovChain) = mc
 
