@@ -55,9 +55,9 @@ function DFun(domain, values::GVector{G,V}; interp_mode=:linear) where V where G
     return DFun(domain, values, itp)
 end
 
-function DFun(model::ADModel, values::GVector{G,V}; interp_mode=:linear) where V where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid
+function DFun(dmodel::ADModel, values::GVector{G,V}; interp_mode=:linear) where V where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid
 
-    domain = model.domain
+    domain = dmodel.model.states
     
     if interp_mode == :linear
         k=1
@@ -92,6 +92,11 @@ end
 function (f::DFun{A,B,I,vars})(i::Int, x::SVector{d2, U})  where A where B<:GArray{G,V} where V where I where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid where vars where d2 where U
     f.itp[i](x)
 end
+
+function (f::DFun{A,B,I,vars})(x::QP)  where A where B<:GArray{G,V} where V where I where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid where vars
+    f(x.loc...)
+end
+
 
 function (f::DFun{A,B,I,vars})(loc::Tuple{Tuple{Int64}, SVector{d2, U}})  where A where B<:GArray{G,V} where V where I where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid where vars where d2 where U
     # TODO: not beautiful

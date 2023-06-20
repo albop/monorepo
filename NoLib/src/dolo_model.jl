@@ -50,8 +50,13 @@ end
 
 function discretize(model::YModel{<:VAR1})
     dvar = discretize(model.exogenous)
+    d = size(model.exogenous.Σ,1)
     exo_grid = SGrid(dvar.Q)
-    endo_grid = discretize(model.states)
+    endo_space = CartesianSpace(
+        model.states.min[d+1:end],
+        model.states.max[d+1:end]
+    )
+    endo_grid = discretize(endo_space)
     grid = exo_grid × endo_grid
     return DYModel(model, grid, dvar)
 end

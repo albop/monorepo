@@ -27,7 +27,7 @@ end
 # iid #
 #######
 
-model = model_iid
+model_iid = include("rbc_iid.jl")
 
 s = rand(model.states)
 x = rand(model.controls)
@@ -52,22 +52,6 @@ res = NoLib.τ(dmodel, s, x.val)
 
 @time NoLib.F(dmodel, s, x.val, φ)
 
-using NoLib.ForwardDiff
-
-function test(dmodel, s, x)
-    φ = NoLib.Policy(
-        model.states,
-        model.controls,
-        u->x.val
-    )
-    # res = ForwardDiff.jacobian(u->NoLib.F(dmodel, s, u, φ), x.val)
-    # sum(sum(res))
-    res = NoLib.F(dmodel, s, x.val, φ)
-    (sum(res))
-end
-
-
-@time test(dmodel, s, x)
 
 # for i in dmodel.grid
 #     println(i)
@@ -80,6 +64,15 @@ end
 xx = GVector(dmodel.grid, [x.val for i=1:length(dmodel.grid)])
 ssss = NoLib.enum(dmodel.grid)
 [ssss...]
+
+
+xx = NoLib.initial_guess(dmodel)
+φ = NoLib.GVector(dmodel.grid, xx)
+
+r0 = NoLib.F(dmodel, xx, φ)
+
+NoLib.time_iteration(dmodel)
+
 
 
 #######
@@ -96,7 +89,7 @@ NoLib.arbitrage(model,s,x,s,x)
 
 # do I need a special locator type?
 
-dmodel =  NoLib.discretize(model_ar1)
+dmodel =  NoLib.discretize(model)
 
 
 # initial point on the grid
@@ -126,6 +119,17 @@ ssss = NoLib.enum(dmodel.grid)
 [ssss...]
 
 
+
+
+# NoLib.initial_guess(model, (;:hi=3))
+
+xx = NoLib.initial_guess(dmodel)
+φ = NoLib.GVector(dmodel.grid, xx)
+
+r0 = NoLib.F(dmodel, xx, φ)
+
+NoLib.time_iteration(dmodel)
+
 #######
 # mc  #
 #######
@@ -134,6 +138,8 @@ model = include("rbc_mc.jl")
 
 s = rand(model.states)
 x = rand(model.controls)
+
+
 
 S = transition(model, s, x);
 NoLib.arbitrage(model,s,x,s,x)
@@ -153,7 +159,7 @@ res = NoLib.τ(dmodel, s0, x.val)
 [res...]
 
 
-φ = NoLib.Policy(
+φ0 = NoLib.Policy(
     model.states,
     model.controls,
     u->x.val
@@ -162,7 +168,7 @@ res = NoLib.τ(dmodel, s0, x.val)
 s0 = NoLib.QP( (1,SVector(0.0)), SVector(-0.1, 0.0))
 
 
-@time NoLib.F(dmodel, s0, x.val, φ)
+@time NoLib.F(dmodel, s0, x.val, φ0)
 
 
 xx = GVector(dmodel.grid, [x.val for i=1:length(dmodel.grid)])
@@ -171,3 +177,21 @@ ssss = NoLib.enum(dmodel.grid)
 
 
 xx[1,1]
+
+φ = NoLib.DFun(dmodel, xx; interp_mode=:linear)
+NoLib.F(dmodel, s0, x.val, φ)
+
+
+NoLib.initial_guess(model, sd)
+
+xx = NoLib.initial_guess(dmodel)
+φ = NoLib.DFun(dmodel, xx; interp_mode=:cubic)
+
+
+
+res = NoLib.F(dmodel, xx, φ)
+
+
+wksp = NoLib.time_iteration_workspace(dmodel);
+@time NoLib.time_iteration(dmodel,wksp; verbose=false);
+@time NoLib.time_iteration(dmodel,wksp; verbose=false, improve=true);

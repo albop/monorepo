@@ -3,6 +3,31 @@ model = let
 
     name = :rbc_iid
 
+    # Σ = @SMatrix [0.9 0.0 ; 0.0 0.1]
+    # process = NoLib.MvNormal( (:ϵ,:η), Σ )
+
+    # calibrate some parameters
+    # calibrate some parameters
+    β = 0.9
+    σ = 5
+    η = 1
+    δ = 0.025
+    α = 0.33
+    ρ = 0.8
+    zbar = 0.0
+    σ_z = 0.016
+    n = 0.33
+    z = zbar
+    rk = 1/β - 1+δ
+    k = n/(rk/α)^(1/(1-α))
+    w = (1-α)*exp(z)*(k/n)^α
+    y = exp(z)*k^α*n^(1-α)
+    i = δ*k
+    c = y - i
+    χ =  w/c^σ/n^η
+
+    calibration = (;β, σ, η, δ, α, ρ, z, n, k, w, y, i, c, χ)
+
 
     states = NoLib.CartesianSpace(;
         :z => (-0.1, 1.0),
@@ -16,23 +41,6 @@ model = let
     
     Σ = @SMatrix [0.9 ;]
     process = NoLib.MvNormal( (:ϵ,), Σ )
-
-    # Σ = @SMatrix [0.9 0.0 ; 0.0 0.1]
-    # process = NoLib.MvNormal( (:ϵ,:η), Σ )
-
-    # calibrate some parameters
-
-    α = 0.3
-    β = 0.9
-    γ = 4.0
-    δ = 0.1
-    
-    ρ = 0.9
-    n = 0.
-    χ = 0.5
-
-
-    calibration = (;α, β, γ, δ, ρ, n, χ, η = 2.0, σ=2.0)
 
     NoLib.YModel(name, states, controls, process, calibration)
 

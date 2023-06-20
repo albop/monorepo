@@ -87,7 +87,6 @@ end
 
 
 
-
 # enum(g::GArray) = enumerate(g)
 
 import Base: *, \, +, -, /

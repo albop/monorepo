@@ -4,14 +4,44 @@ model = let
 
     name = :rbc_mc
 
-    P = @SMatrix [0.9 0.1; 0.1 0.9]
+    # calibrate some parameters
+    β = 0.9
+    σ = 5
+    η = 1
+    δ = 0.025
+    α = 0.33
+    ρ = 0.8
+    zbar = 0.0
+    σ_z = 0.016
+    n = 0.33
+    z = zbar
+    rk = 1/β - 1+δ
+    k = n/(rk/α)^(1/(1-α))
+    w = (1-α)*exp(z)*(k/n)^α
+    y = exp(z)*k^α*n^(1-α)
+    i = δ*k
+    c = y - i
+    χ =  w/c^σ/n^η
+
+    calibration = (;β, σ, η, δ, α, ρ, z, n, k, w, y, i, c, χ)
+
+
+    P = @SMatrix [0.4 0.6; 0.6 0.4]
+	# Q = @SMatrix [-0.01; 0.01]
     Q = SVector( SVector(-0.01), SVector(0.01) )
+
+    # P = @SMatrix [1.0;]
+    # Q = SVector( (SVector(0.0),) )
+    
+    # @show Q
+    
+    
     process = NoLib.MarkovChain( (:z,), P, Q )
 
     states = NoLib.ProductSpace(
         NoLib.GridSpace((:z,), Q),
         NoLib.CartesianSpace(;
-            :k => ( 0.0, 1.0),
+            :k => ( k*0.9, k*1.1),
         )
     )
     controls = NoLib.CartesianSpace(;
@@ -19,19 +49,7 @@ model = let
         :n => (0.0, 1.5)
     )
 
-    # calibrate some parameters
-
-
-    α = 0.3
-    β = 0.9
-    γ = 4.0
-    δ = 0.1
-    
-    ρ = 0.9
-    χ = 0.5
-    n = 0.8
-
-    calibration = (;α, β, γ, δ, ρ,χ, n, η = 2.0, σ = 2.0)
+    # calibration = (;α, β, γ, δ, ρ,χ, η = 2.0, σ = 2.0, i=0.1, n=0.8)
 
 
     NoLib.YModel(name, states, controls, process, calibration)

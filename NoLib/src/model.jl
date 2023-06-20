@@ -122,38 +122,47 @@ function split_states(model::AModel, s_)
 
 end
 
-## default implementation
-function initial_guess(model, m::SLArray, s::SLArray, p)
-    model.calibration.x
+# TODO: restore initial_guess mechani
+
+# ## default implementation
+function initial_guess(model::AModel, s::NamedTuple)
+    vars = variables(model.controls)
+    vals = tuple( (model.calibration[k] for k in vars )...)
+    return NamedTuple{vars}(vals)
 end
 
-function initial_guess(model::ADModel, m::SVector, s::SVector, p)
+# function initial_guess(model::ADModel, m::SVector, s::SVector, p)
 
-    m = LVectorLike(model.calibration.m, m)  # this does not keep the original type
-    s = LVectorLike(model.calibration.s, s)
+#     m = LVectorLike(model.calibration.m, m)  # this does not keep the original type
+#     s = LVectorLike(model.calibration.s, s)
     
-    x = initial_guess(model, m, s, p)
+#     x = initial_guess(model, m, s, p)
     
-    return SVector(x...)
+#     return SVector(x...)
     
-end
+# end
 
-function initial_guess(model::ADModel, s::SVector)
-    
-    p = model.calibration.p
+function initial_guess(model::AModel, s::SVector)
 
-    m_, s_ = split_states(model, s)
+    ss = NamedTuple{variables(model.states)}(s)
+    xx = initial_guess(model, ss)
 
-    x = initial_guess(model, m_, s_, p)
-
-    return SVector(x...)
+     return SVector(xx...)
 
 end
 
 
-function initial_guess(model)
+
+function initial_guess(model::AModel, s::QP)
+    
+    initial_guess(model, s.val)
+
+end
+
+
+function initial_guess(dmodel::ADModel)
     GVector(
-        model.grid,
-        [initial_guess(model, s) for s in model.grid]
+        dmodel.grid,
+        [SVector( initial_guess(dmodel.model, s)... ) for s in NoLib.enum(dmodel.grid)]
     )
 end

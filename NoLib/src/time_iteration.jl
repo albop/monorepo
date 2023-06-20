@@ -37,7 +37,7 @@ function F!(out, model, controls::GArray, φ::Union{GArray, DFun})
         i, j = NoLib.from_linear(model.grid, n)
 
         s_ = model.grid[n]
-        s = ((i,j), s_)
+        s = QP((i,j), s_)
         x = controls[n]
         out[n] = F(model,s,x,φ)
     end

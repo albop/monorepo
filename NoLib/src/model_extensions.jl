@@ -74,10 +74,12 @@ function transition(model::YModel{<:MarkovChain}, s::QP, xx::QP)
     
     i = s.loc[1] # i loc
     
-    j = 2    
+    j = 1
+    M =model.exogenous.Q[j] # TODO: should be random
+
     # M_v = model.exogenous.Q[j]   # vector of exogenous values
     v = NamedTuple{variables(model.states)}(s.val)
-    M_v = NamedTuple{variables(model.exogenous)}(model.exogenous.Q[j] )
+    M_v = NamedTuple{variables(model.exogenous)}( M )
     x = NamedTuple{variables(model.controls)}(xx.val)
 
     S_e =  transition(model, v, x, M_v)        # vector of endogenous values
