@@ -3,6 +3,7 @@ using NoLib: ×
 using NoLib: transition, arbitrage
 import NoLib: transition
 import NoLib: arbitrage
+using NoLib: GVector
 
 using NoLib
 using StaticArrays
@@ -76,6 +77,9 @@ end
 #     println(i)
 # end
 
+xx = GVector(dmodel.grid, [x.val for i=1:length(dmodel.grid)])
+ssss = NoLib.enum(dmodel.grid)
+[ssss...]
 
 
 #######
@@ -115,6 +119,11 @@ res = NoLib.τ(dmodel, s0, x.val)
 
 NoLib.F(dmodel, s0, x.val, φ)
 
+dmodel.grid[3]
+
+xx = GVector(dmodel.grid, [x.val for i=1:length(dmodel.grid)])
+ssss = NoLib.enum(dmodel.grid)
+[ssss...]
 
 
 #######
@@ -154,3 +163,11 @@ s0 = NoLib.QP( (1,SVector(0.0)), SVector(-0.1, 0.0))
 
 
 @time NoLib.F(dmodel, s0, x.val, φ)
+
+
+xx = GVector(dmodel.grid, [x.val for i=1:length(dmodel.grid)])
+ssss = NoLib.enum(dmodel.grid)
+[ssss...]
+
+
+xx[1,1]

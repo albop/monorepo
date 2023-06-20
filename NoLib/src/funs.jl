@@ -12,7 +12,7 @@ struct Policy{From, To, Fun}
     fun::Fun
 end
 
-(pol::Policy)(s::QP) = pol.fun(s)
+(pol::Policy)(s::QP) = pol.fun(s.val)
 (pol::Policy)(s) = pol.fun(s)
 
 

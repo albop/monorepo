@@ -11,13 +11,30 @@ struct CGrid{d} <: AGrid{d}
 end
 
 
+# enum(grid::CGrid) = (
+#     QP((c[1],c[2]), grid[c]) for c in CartesianIndices((length(grid.g1), length(grid.g2)))
+# )
 
+getindex(g::CGrid{d}, inds::Vararg{Int64,d}) where d = SVector{d}(
+    ( 
+        ( g.ranges[i][1] + (g.ranges[i][2]-g.ranges[i][1])*( (inds[i]-1)/(g.ranges[i][3]-1)) )
+        for i=1:d
+    )
+)
+
+getindex(g::CGrid{d}, ci::CartesianIndex) where d = g[ci.I...]
+
+enum(g::CGrid{d}) where d = ( QP(c.I, g[c]) for c in CartesianIndices( tuple( ((r[3]) for r in g.ranges)...) ) )
+# enum(g::CGrid{d}) where d = ( (c, g[c]) for c in CartesianIndices( tuple( (length(r) for r in g.ranges)...) ) )
 # getindex(g::CGrid{1}, i::Int) = SVector{1}(
 #     g.ranges[1][1] + (g.ranges[1][2]-g.ranges[1][1])*( (i-1)/(g.ranges[1][3]-1))
 # )
 
 getindex(g::CGrid{1}, ::Colon) = [SVector(i) for i in range(g.ranges[1]...)]
 
+@inline to__linear_index(g::CGrid{d}, ind::Vararg{Int64, d}) where d = LinearIndices(
+    tuple( (1:r[3] for r in g.ranges)... )
+)[ind...]
 
 
 
@@ -26,8 +43,8 @@ struct SGrid{n,d} <: ASGrid{d}
 end
 
 function SGrid(Q::Matrix)
-    d = size(Q,2)
-    return SGrid{d}([SVector(Q[i,:]...) for i=1:size(Q,1)])
+    n,d = size(Q)
+    return SGrid{n,d}([SVector(Q[i,:]...) for i=1:size(Q,1)])
 end
 
 function SGrid(v::Vector)
@@ -51,7 +68,7 @@ cover(m,v::SVector{d,T}) where d where T = SVector{d,T}(
     (v[i] for i=length(m)+1:length(v))...
 )
 
-PGrid(g1::SGrid{d1}, g2::CGrid{d2}) where d1 where d2 = PGrid{typeof(g1), CGrid{d2}, d1+d2}(g1, g2)
+PGrid(g1::SGrid{n, d1}, g2::CGrid{d2}) where n where d1 where d2 = PGrid{typeof(g1), CGrid{d2}, d1+d2}(g1, g2)
 cross(g1::SGrid{d1}, g2::CGrid{d2}) where d1 where d2 = PGrid(g1,g2)
 
 # another way to define multi-dimension cartesian grids
@@ -135,7 +152,10 @@ getindex(s::CGrid{1}, i::Int) = let
 end
 
 getindex(s::CGrid{2}, n::Int) = let
-    pg = PGrid(CGrid((s.ranges[1])), CGrid((s.ranges[2])))
+    pg = PGrid(
+        CGrid((s.ranges[1],)),
+        CGrid((s.ranges[2],))
+    )
     (i,j) = from_linear(pg, n)
     a_1 = s.ranges[1][1]
     b_1 = s.ranges[1][2]
@@ -191,6 +211,8 @@ function Base.iterate(g::CGrid{2},state)
         end
     end
 end
+
+
 
 
 # a bit slower
@@ -268,7 +290,7 @@ end
 using Base.IteratorsMD: CartesianIndices
 
 enum(grid::PGrid) = (
-    ((c[1],c[2]), grid[c]) for c in CartesianIndices((length(grid.g1), length(grid.g2)))
+    QP((c[1],c[2]), grid[c]) for c in CartesianIndices((length(grid.g1), length(grid.g2)))
 )
 
 using ResumableFunctions

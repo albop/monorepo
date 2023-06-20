@@ -52,9 +52,11 @@ iterate(g::GArray) = iterate(g.data)
 iterate(g::GArray, i) = iterate(g.data, i)
 
 length(g::GArray) = length(g.data)
+
 getindex(g::GArray{G,T}, i::Int64) where G where T = g.data[i]
 setindex!(g::GArray, x, i) = (g.data[i] = x)
 
+getindex(g::GArray{G,T}, inds::Vararg{Int64, d}) where G<:AGrid{d} where d where T = g.data[to__linear_index(g, inds)]
 
 # interpolating indexing
 function (xa::GArray{PGrid{G1, G2, d}, T})(i::Int64, p::SVector{d2, U}) where G1<:SGrid where G2<:CGrid{d2} where d where d2 where T where U
