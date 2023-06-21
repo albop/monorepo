@@ -36,7 +36,7 @@ model = let
         :n => (0.0, 1.5)
     )
     
-    Σ = @SMatrix [0.01 ;]
+    Σ = @SMatrix [0.001 ;]
     process = NoLib.MvNormal( (:ϵ,), Σ )
 
     NoLib.YModel(name, states, controls, process, calibration)

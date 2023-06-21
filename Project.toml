@@ -1,10 +1,12 @@
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Dolang = "e5c7262c-e9d2-5620-ad8e-1af14eb8a8e3"
 Dolo = "9d24351c-2990-5e1b-a277-04c4b809c898"
 DoloYAML = "5444aaa2-d204-4231-b785-bc52d56d058b"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
 LabelledArrays = "2ee39098-c373-598a-b85f-a56591580800"
 NoLib = "87179f8f-7bad-4647-abf4-d65b80753c8f"

@@ -210,7 +210,8 @@ function time_iteration(model, workspace=time_iteration_workspace(model);
 
             J_1 = NoLib.dF_1(model, x1, φ)
             J_2 =  NoLib.dF_2(model, x1, φ)
-            J_2.M_ij[:] *= -1.0
+            mul!(J_2, -1.0)
+            # J_2.M_ij[:] *= -1.0
             Tp = J_1 \ J_2
             r = x1 - Tp * x0
 
