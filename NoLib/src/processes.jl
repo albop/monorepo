@@ -296,8 +296,6 @@ function MarkovChain(names, P::Matrix, Q::Matrix)
     d = size(P,1)
     sm = SMatrix{d,d,Float64,d*d}(P)
     sv = SVector( tuple( ( SVector(Q[i,:]...) for i in 1:size(Q,1))...)  )
-    @show sm
-    @show sv
     MarkovChain{names,d,d^2,length(sv[1])}(sm,sv)
 end
 

@@ -176,6 +176,7 @@ function time_iteration(model, workspace=time_iteration_workspace(model);
 
             dx.data .= J.data .\ r0.data
 
+
             for k=0:mbsteps
                 x2.data .= x1.data .- dx.data .* lam^k
                 if engine==:cpu

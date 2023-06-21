@@ -68,47 +68,57 @@ end
         θ .= V
     end
 
-    function CubicInterpolator(grid; values=nothing)
+    # function CubicInterpolator(grid; values=nothing)
 
-        n = [e[3] for e in grid.ranges]
-        θ = zeros(eltype(values), (i+2 for i in n)...)
-        ci = CubicInterpolator{typeof(grid), typeof(θ)}(grid, θ)
-        if !isnothing(values)
-            ind = tuple( (2:(e[3]+1) for e in grid.ranges )...)
-            ci.θ[ind...] .= values
-            splines.prefilter!(ci.θ)
-        end
-        return ci
+    #     println("Hejo")
+
+    #     n = [e[3] for e in grid.ranges]
+    #     θ = zeros(eltype(values), (i+2 for i in n)...)
+    #     ci = CubicInterpolator{typeof(grid), typeof(θ)}(grid, θ)
+    #     if !isnothing(values)
+    #         ind = tuple( (2:(e[3]+1) for e in grid.ranges )...)
+    #         ci.θ[ind...] .= values
+    #         splines.prefilter!(ci.θ)
+    #     end
+    #     return ci
     
-    end
+    # end
 
 
     function fit!(spl::SplineInterpolator{G,C,k}, values) where G where C where k
 
         # grid = spl.grid
         # n = [e[3] for e in spl.grid]
+        nn = tuple( ((e[3]) for e in spl.grid )...)
+        rhs = reshape(view(values,:),nn...)
         if k==3
             fill!(spl.θ, zero(eltype(spl.θ)))
             ind = tuple( (2:(e[3]+1) for e in spl.grid )...)
-            spl.θ[ind...] .= values
+            spl.θ[ind...] .= rhs
             splines.prefilter!(spl.θ)
         elseif k==1
-            spl.θ .= values
+            spl.θ .= rhs
         end
     
     end
 
-    function SplineInterpolator(ranges; values=nothing, k=3)
+    function SplineInterpolator(ranges::Tuple; values=nothing, k=3)
 
         n = [e[3] for e in ranges]
-        θ_ = zeros(eltype(values), (i+k-1 for i in n)...)
-        θ = MVector(θ_...) # TODO: check whether we always want that
+        dims = tuple((i+k-1 for i in n)...)
+        θ_ = zeros(eltype(values), dims...)
+        nn = length(θ_)
+
+        θ = θ_ # TODO: use MArray here
+        # return θ
+        # θ = MVector{dims, eltype(values), nn}(θ_...) # TODO: check whether we always want that
         ci = SplineInterpolator{typeof(ranges), typeof(θ), k}(ranges, θ)
         if !isnothing(values)
             fit!(ci, values)
         end
+        
         return ci
-    
+
     end
 
     function (spl::SplineInterpolator{G,C,3})(x) where G where C

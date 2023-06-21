@@ -1,9 +1,9 @@
 import Base: *
 
-struct LF{G, T, F,n_s}
+struct LF{G, T, Q, F}
     grid::G
-    M_ij::Matrix{T}
-    S_ij::Matrix{Tuple{Tuple{Int64}, SVector{n_s, Float64}}}
+    M_ij::T
+    S_ij::Q # Q should be QP locator
     φ::F
 end
 
@@ -11,6 +11,7 @@ end
 import Base: /,*
 import LinearAlgebra: mul!
 
+# this is for SGrid \times CGrid
 function dF_2(model, x::GArray, φ::DFun )
 
     res = []
@@ -18,7 +19,8 @@ function dF_2(model, x::GArray, φ::DFun )
         l = []
         for (w, S) in τ(model, s, x)
             el = w*ForwardDiff.jacobian(u->arbitrage(model,s,x,S,u), φ(S))
-            push!(l, (el, S))
+            # push!(l, (el, S.loc[2]))
+            push!(l, (el, S.loc))
         end
         push!(res, l)
     end
@@ -33,6 +35,7 @@ function dF_2(model, x::GArray, φ::DFun )
             S_ij[n,j] = res[n][j][2]
         end
     end
+
     L = LF(model.grid, M_ij, S_ij, deepcopy(φ))
     return L
 end
@@ -42,7 +45,7 @@ function dF_2!(L, model, xx::GArray, φ::DFun )
         for (j,(w, S)) in enumerate(τ(model, s, x))
             el = w*ForwardDiff.jacobian(u->arbitrage(model,s,x,S,u), φ(S))
             L.M_ij[n,j] = el
-            L.S_ij[n,j] = S
+            L.S_ij[n,j] = S.loc
         end
     end
 end

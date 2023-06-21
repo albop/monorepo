@@ -37,6 +37,7 @@ x = rand(model.controls)
 NoLib.transition(model, s, x)   # basic transition function
 NoLib.arbitrage(model,s,x,s,x)
 
+
 dmodel = NoLib.discretize(model)
 
 res = NoLib.τ(dmodel, s, x.val)
@@ -65,13 +66,15 @@ xx = GVector(dmodel.grid, [x.val for i=1:length(dmodel.grid)])
 ssss = NoLib.enum(dmodel.grid)
 [ssss...]
 
-
 xx = NoLib.initial_guess(dmodel)
-φ = NoLib.GVector(dmodel.grid, xx)
+
+
+
+φ = NoLib.DFun(dmodel, xx; interp_mode=:linear)
 
 r0 = NoLib.F(dmodel, xx, φ)
 
-NoLib.time_iteration(dmodel)
+@time NoLib.time_iteration(dmodel; verbose=false);
 
 
 
@@ -124,11 +127,12 @@ ssss = NoLib.enum(dmodel.grid)
 # NoLib.initial_guess(model, (;:hi=3))
 
 xx = NoLib.initial_guess(dmodel)
-φ = NoLib.GVector(dmodel.grid, xx)
+
+φ = NoLib.DFun(dmodel, xx; interp_mode=:linear)
 
 r0 = NoLib.F(dmodel, xx, φ)
 
-NoLib.time_iteration(dmodel)
+@time NoLib.time_iteration(dmodel);
 
 #######
 # mc  #
@@ -182,16 +186,25 @@ xx[1,1]
 NoLib.F(dmodel, s0, x.val, φ)
 
 
-NoLib.initial_guess(model, sd)
-
 xx = NoLib.initial_guess(dmodel)
 φ = NoLib.DFun(dmodel, xx; interp_mode=:cubic)
 
-
-
 res = NoLib.F(dmodel, xx, φ)
 
+a, b, c, d  = NoLib.dF_2(dmodel, xx, φ)
+
+
+@time NoLib.time_iteration(dmodel; verbose=false, improve=true);
+
+
+@time NoLib.time_iteration(dmodel; verbose=true);
+
+@time NoLib.time_iteration(dmodel; verbose=true);
 
 wksp = NoLib.time_iteration_workspace(dmodel);
+
 @time NoLib.time_iteration(dmodel,wksp; verbose=false);
 @time NoLib.time_iteration(dmodel,wksp; verbose=false, improve=true);
+
+
+@time NoLib.time_iteration(dmodel; verbose=false, improve=true);

@@ -24,17 +24,18 @@ getindex(g::CGrid{d}, inds::Vararg{Int64,d}) where d = SVector{d}(
 
 getindex(g::CGrid{d}, ci::CartesianIndex) where d = g[ci.I...]
 
-enum(g::CGrid{d}) where d = ( QP(c.I, g[c]) for c in CartesianIndices( tuple( ((r[3]) for r in g.ranges)...) ) )
-# enum(g::CGrid{d}) where d = ( (c, g[c]) for c in CartesianIndices( tuple( (length(r) for r in g.ranges)...) ) )
-# getindex(g::CGrid{1}, i::Int) = SVector{1}(
-#     g.ranges[1][1] + (g.ranges[1][2]-g.ranges[1][1])*( (i-1)/(g.ranges[1][3]-1))
-# )
+enum(g::CGrid{d}) where d = (QP(c, g[c...]) for c in Iterators.product( tuple( ((1:r[3]) for r in g.ranges)... )... ) )
 
 getindex(g::CGrid{1}, ::Colon) = [SVector(i) for i in range(g.ranges[1]...)]
 
 @inline to__linear_index(g::CGrid{d}, ind::Vararg{Int64, d}) where d = LinearIndices(
     tuple( (1:r[3] for r in g.ranges)... )
 )[ind...]
+
+@inline from_linear(g::CGrid{d}, n) where d = CartesianIndices(
+    tuple( (1:r[3] for r in g.ranges)... )
+)[n].I
+
 
 
 
@@ -289,9 +290,14 @@ end
 
 using Base.IteratorsMD: CartesianIndices
 
+# enum(grid::PGrid) = (
+#     QP((c[1],c[2]), grid[c]) for c in CartesianIndices((length(grid.g1), length(grid.g2)))
+# )
+
 enum(grid::PGrid) = (
-    QP((c[1],c[2]), grid[c]) for c in CartesianIndices((length(grid.g1), length(grid.g2)))
+    QP((c[1],c[2]), grid[c...]) for c in Iterators.product(1:length(grid.g1), 1:length(grid.g2))
 )
+
 
 using ResumableFunctions
 

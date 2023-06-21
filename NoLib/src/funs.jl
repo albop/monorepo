@@ -74,7 +74,7 @@ function DFun(dmodel::ADModel, values::GVector{G,V}; interp_mode=:linear) where 
 
 end
 
-function fit!(φ::DFun, x::GVector)
+function fit!(φ::DFun, x::GVector{G}) where G<:PGrid{<:SGrid, <:CGrid}
 
     # This is only for SGrid x CGrid
 
@@ -88,6 +88,12 @@ function fit!(φ::DFun, x::GVector)
 
 end
 
+function fit!(φ::DFun, x::GVector{G}) where G<:CGrid
+
+    splines.fit!(φ.itp, x.data)
+
+end
+
 ## PGrid
 function (f::DFun{A,B,I,vars})(i::Int, x::SVector{d2, U})  where A where B<:GArray{G,V} where V where I where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid where vars where d2 where U
     f.itp[i](x)
@@ -97,6 +103,9 @@ function (f::DFun{A,B,I,vars})(x::QP)  where A where B<:GArray{G,V} where V wher
     f(x.loc...)
 end
 
+function (f::DFun{A,B,I,vars})(x::Tuple)  where A where B<:GArray{G,V} where V where I where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid where vars
+    f(x...)
+end
 
 function (f::DFun{A,B,I,vars})(loc::Tuple{Tuple{Int64}, SVector{d2, U}})  where A where B<:GArray{G,V} where V where I where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid where vars where d2 where U
     # TODO: not beautiful
@@ -106,6 +115,17 @@ function (f::DFun{A,B,I,vars})(loc::Tuple{Tuple{Int64}, SVector{d2, U}})  where 
     x = SVector((x_[i] for i=(dd1+1):(dd1+dd2))...)
     f.itp[loc[1][1]](x)
 end
+
+# CGrid
+
+function (f::DFun{A,B,I,vars})(x::QP)  where A where B<:GArray{G,V} where V where I where G<:CGrid where vars
+    return f.itp(x.loc)
+end
+
+# function (f::DFun{A,B,I,vars})(x::Tuple)  where A where B<:GArray{G,V} where V where I where G<:CGrid where vars
+#     return f.itp(x)
+# end
+
 
 # Compatibility calls
 

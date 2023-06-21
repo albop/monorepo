@@ -163,6 +163,6 @@ end
 function initial_guess(dmodel::ADModel)
     GVector(
         dmodel.grid,
-        [SVector( initial_guess(dmodel.model, s)... ) for s in NoLib.enum(dmodel.grid)]
+        [(SVector( initial_guess(dmodel.model, s)... ) for s in NoLib.enum(dmodel.grid))...]
     )
 end
