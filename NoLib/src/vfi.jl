@@ -83,20 +83,20 @@ end
 
 
 
-# function catl(a::SLArray{Tuple{d1},Float64,1,d1,dims1}, b::SLArray{Tuple{d2},Float64,1,d2,dims2})
-function catl(a::SLArray, b::SLArray)
+# # function catl(a::SLArray{Tuple{d1},Float64,1,d1,dims1}, b::SLArray{Tuple{d2},Float64,1,d2,dims2})
+# function catl(a::SLArray, b::SLArray)
     
-    sa = LabelledArrays.symbols(a)
-    sb = LabelledArrays.symbols(b)
+#     sa = LabelledArrays.symbols(a)
+#     sb = LabelledArrays.symbols(b)
 
-    dims = tuple(sa..., sb...)
-    vec = SVector(a..., b...)
+#     dims = tuple(sa..., sb...)
+#     vec = SVector(a..., b...)
 
-    d = length(dims)
+#     d = length(dims)
     
-    SLArray{Tuple{d},Float64,1,d,dims}(vec...)
+#     SLArray{Tuple{d},Float64,1,d,dims}(vec...)
 
-end
+# end
 
 function reward(model, s_::SVector, x_::SVector)
     

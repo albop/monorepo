@@ -15,6 +15,7 @@ using StaticArrays
 
 model = include("rbc_mc.jl")
 
+
 s = rand(model.states)
 x = rand(model.controls)
 

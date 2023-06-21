@@ -1,7 +1,7 @@
 module NoLib
 
     import Base: eltype
-    using LabelledArrays
+    # using LabelledArrays
     using StaticArrays
     using ForwardDiff
     
@@ -15,17 +15,17 @@ module NoLib
 
     import Base: getindex
 
-    import LabelledArrays: merge
+    # import LabelledArrays: merge
 
     # TODO
     converged(sol::NamedTuple) = (sol.message == "Convergence")
 
 
-    # type piracy
-    function merge(a::SLArray, b::NamedTuple)
-        @assert issubset(keys(b), keys(a))
-        SLVector( (merge(NamedTuple(a), b)) )
-    end
+    # # type piracy
+    # function merge(a::SLArray, b::NamedTuple)
+    #     @assert issubset(keys(b), keys(a))
+    #     SLVector( (merge(NamedTuple(a), b)) )
+    # end
 
 
     struct QP{A,B}

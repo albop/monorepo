@@ -82,45 +82,45 @@ label_GArray(m, g::GArray) = GArray(g.grid, [LVectorLike(m, e) for e in g.data])
 
 include("model_extensions.jl")
 
-function arbitrage(model::ADModel, m, s, x, M, S, X, p)
-    m = LVectorLike(model.calibration.m, m)  # this does not keep the original type
-    s = LVectorLike(model.calibration.s, s)
-    x = LVectorLike(model.calibration.x, x)
-    M = LVectorLike(model.calibration.m, M)
-    S = LVectorLike(model.calibration.s, S)
-    X = LVectorLike(model.calibration.x, X)
-    r = arbitrage(model,m,s,x,M,S,X,p)
-    return SVector(r...)
-end
+# function arbitrage(model::ADModel, m, s, x, M, S, X, p)
+#     m = LVectorLike(model.calibration.m, m)  # this does not keep the original type
+#     s = LVectorLike(model.calibration.s, s)
+#     x = LVectorLike(model.calibration.x, x)
+#     M = LVectorLike(model.calibration.m, M)
+#     S = LVectorLike(model.calibration.s, S)
+#     X = LVectorLike(model.calibration.x, X)
+#     r = arbitrage(model,m,s,x,M,S,X,p)
+#     return SVector(r...)
+# end
 
-function arbitrage(model::ADModel, s, x, S, X)
-    p = model.calibration.p
+# function arbitrage(model::ADModel, s, x, S, X)
+#     p = model.calibration.p
     
-    arbitrage(model, 
-        NoLib.split_states(model, s)...,
-        x,
-        NoLib.split_states(model, S)...,
-        X,
-        p
-    )
-end
+#     arbitrage(model, 
+#         NoLib.split_states(model, s)...,
+#         x,
+#         NoLib.split_states(model, S)...,
+#         X,
+#         p
+#     )
+# end
 
 
-function split_states(model::ADModel, S::Tuple{ind, v}) where ind where v<:SVector
-    split_states(model, S[2])
-end
+# function split_states(model::ADModel, S::Tuple{ind, v}) where ind where v<:SVector
+#     split_states(model, S[2])
+# end
 
-function split_states(model::AModel, s_)
+# function split_states(model::AModel, s_)
 
-    n_m = ndims(model.exogenous)  # this does not keep the original type
-    n_s = ndims(model.states) - n_m
+#     n_m = ndims(model.exogenous)  # this does not keep the original type
+#     n_s = ndims(model.states) - n_m
 
-    m = SVector((s_[i] for i=1:n_m)...)
-    s = SVector((s_[i] for i=n_m+1:(n_m+n_s))...)
+#     m = SVector((s_[i] for i=1:n_m)...)
+#     s = SVector((s_[i] for i=n_m+1:(n_m+n_s))...)
 
-    return (;m,s)
+#     return (;m,s)
 
-end
+# end
 
 # TODO: restore initial_guess mechani
 

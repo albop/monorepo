@@ -19,13 +19,14 @@ using DataStructures: OrderedDict
 # defind language understood in yaml files
 language = minilang
 
-mutable struct Model{ID, Dom} <: AbstractModel{Dom}
+mutable struct Model{ID, Dom, P} <: AbstractModel{Dom}
 
     data::YAML.MappingNode
     symbols::Dict{Symbol, Vector{Symbol}}
     calibration::ModelCalibration
+    parameters::P
     exogenous
-    domain   ## ::Dom
+    domain::Dom
     factories
     definitions
 
@@ -89,12 +90,13 @@ function Model(data::YAML.Node)
 
     dom_typ = typeof(domain)
 
+    p = SVector(calibration[:parameters]...)
 
-
-    model = Model{id, dom_typ}(
+    model = Model{id, dom_typ, typeof(p)}(
         data,
         symbols,
         calibration,
+        p,
         exogenous,
         domain,
         nothing,

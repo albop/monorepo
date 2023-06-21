@@ -60,7 +60,11 @@ function transition(model::YModel{<:MarkovChain}, s::SVector, x::SVector, M::SVe
     ss = NamedTuple{variables(model.states)}(s)
     xx = NamedTuple{variables(model.controls)}(x)
     MM = NamedTuple{variables(model.exogenous)}(M)
-    transition(model, ss, xx, MM)
+    res = transition(model, ss, xx, MM)
+    # reorder variables just in case
+    d = length(NoLib.variables(model.exogenous))
+    endo_vars = tuple( (k for (i,k) in enumerate(variables(model.states)) if i>d )...)
+    SVector((res[k] for k in endo_vars)...)
 end
 
 

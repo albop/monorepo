@@ -102,7 +102,7 @@ import Base: *, \, +, -, /
 
 
 *(A::GArray{G,Vector{T}}, x::SVector{q, Float64}) where G where T <:SMatrix{p, q, Float64, n}  where p where q where n = GArray(A.grid, [M*x for M in A.data])
-*(A::GArray{G,Vector{T}}, x::SLArray{Tuple{q}, Float64, 1, q, names}) where G where T <:SMatrix{p, q, Float64, n}  where p where q where n where names = A*SVector(x...)
+# *(A::GArray{G,Vector{T}}, x::SLArray{Tuple{q}, Float64, 1, q, names}) where G where T <:SMatrix{p, q, Float64, n}  where p where q where n where names = A*SVector(x...)
 
 
 *(A::GArray{G,T}, B::AbstractArray{Float64}) where G where T <:SMatrix{p, q, Float64, n}  where p where q where n = 

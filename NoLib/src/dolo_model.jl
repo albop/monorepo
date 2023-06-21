@@ -1,12 +1,13 @@
-struct YModel{C,A,B,D,N} <: AModel
+struct YModel{C,A,B,D,N,S} <: AModel
     states::A         # must be exo \times endo
     controls::B
     exogenous::C
     calibration::D
-
+    source::S
 end 
 
-YModel(N,A,B,C,D) = YModel{typeof(C),typeof(A),typeof(B),typeof(D),N}(A,B,C,D)
+YModel(N,A,B,C,D) = YModel{typeof(C),typeof(A),typeof(B),typeof(D),N,Nothing}(A,B,C,D,nothing)
+YModel(N,A,B,C,D,S) = YModel{typeof(C),typeof(A),typeof(B),typeof(D),N,typeof(S)}(A,B,C,D,S)
 
 name(::YModel{C,A,B,D,N}) where C where A where B where D where N = N
 
