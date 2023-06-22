@@ -4,13 +4,13 @@ const NL=NoLib
 
 using StaticArrays
 using LabelledArrays
-using NoLib: SSGrid, CGrid, PGrid, GArray, DModel
-import NoLib: ×, ⟂
+using NoLib: SGrid, CGrid, PGrid, GArray, YModel
+import NoLib: ×, ⟂, ⫫
 import NoLib: transition, arbitrage, recalibrate, initial_guess, projection, equilibrium
 import NoLib: X, reward
 import NoLib: GridSpace, CartesianSpace
 
-using QuantEcon: rouwenhorst
+using NoLib: rouwenhorst
 
 model = let 
 
@@ -33,7 +33,7 @@ model = let
 
     c = 0.9*y
 
-    λ = 0
+    λ = 0.1
 
     e = 0
     cbar = c
@@ -41,101 +41,114 @@ model = let
     N = 200
 
 
-    m = SLVector(;w,r,e)
-    s = SLVector(;y)
-    # x = SLVector(;c, λ)
-    x = SLVector(;c)
-    y = SLVector(;K)
-    z = SLVector(;z=0.0)
+    m = (;w,r,e)
+    s = (;y)
+    x = (;c, λ)
+    y = (;K)
+    z = (;z=0.0)
+    p = (;β, γ, σ, ρ, cbar, α, δ, N)
 
-    p = SLVector(;β, γ, σ, ρ, cbar, α, δ, N)
+    calibration = merge(m,s,x,y,z,p)
+
 
     n_m = 3
     mc = rouwenhorst(3,ρ,σ)
     
-    P = convert(SMatrix{n_m, n_m}, mc.p)
+    P = convert(SMatrix{n_m, n_m}, mc.P)
     ## decide whether this should be matrix or smatrix
-    Q = SVector( (SVector(w,r,e) for e in mc.state_values)... )
+    Q = SVector( (SVector(w,r,e) for e in mc.V)... )
 
-    domain = GridSpace(
-        [Q[i] for i=1:size(Q,1)] 
+    states = GridSpace(
+        (:w,:r,:e),
+        SVector( [Q[i] for i=1:size(Q,1)]...  )
     )×CartesianSpace(;
-        k=[0.01, 100]
+        y=[0.01, 100]
     )
 
-    grid = SSGrid(Q) × CGrid(((0.01,80.0,N),))
+    controls = CartesianSpace(;
+        c=(0,Inf),
+        λ=(0,Inf)
+    )
+    exogenous = NoLib.MarkovChain(
+        (:w,:r,:e), P,Q
+    )
+    # grid 1 = SGrid(Q) × CGrid(((0.01,80.0,N),))
     
-    name = Val(:ayiagari)
+    name = :ayiagari
 
-    DModel(
-        (;m, s, x, y, z, p),
-        domain,
-        grid,
-        P
+    YModel(
+        name,
+        states,
+        controls,
+        exogenous,
+        calibration
     )
 
 end
 
 # small workaround to limit endless printing
-show(io::IO, tt::Type{typeof(model)}) = print(io, "DModel{#$(hash(tt))}")
+# show(io::IO, tt::Type{typeof(model)}) = print(io, "DModel{#$(hash(tt))}")
 
 @assert isbits(model)
 
 
 
-function recalibrate(mod::typeof(model); K=mod.calibration.y.K, N=mod.calibration.p.N)
+# function recalibrate(mod::typeof(model); K=mod.calibration.y.K, N=mod.calibration.p.N)
 
-    # this lacks generality but should be future proof
+#     # this lacks generality but should be future proof
 
-    (;m, s, x, y, z, p) = mod.calibration
+#     (;m, s, x, y, z, p) = mod.calibration
     
-    (;ρ, σ, α, δ) = p
+#     (;ρ, σ, α, δ) = p
 
-    r = α*(1/K)^(1-α) - δ
-    w = (1-α)*K^α
+#     r = α*(1/K)^(1-α) - δ
+#     w = (1-α)*K^α
 
-    m = merge(m, (;w=w, r=r))
-    y = merge(y, (;K=K))
-    p = merge(p, (;N=N))
+#     m = merge(m, (;w=w, r=r))
+#     y = merge(y, (;K=K))
+#     p = merge(p, (;N=N))
 
 
-    N_ = convert(Int,N)
+#     N_ = convert(Int,N)
     
-    ## decide whether this should be matrix or smatrix
-    n_m = 3
-    mc = rouwenhorst(3,ρ,σ)
+#     ## decide whether this should be matrix or smatrix
+#     n_m = 3
+#     mc = rouwenhorst(3,ρ,σ)
     
-    P = convert(SMatrix{n_m, n_m}, mc.p)
-    ## decide whether this should be matrix or smatrix
-    Q = SVector( (SVector(w,r,e) for e in mc.state_values)... )
+#     P = convert(SMatrix{n_m, n_m}, mc.p)
+#     ## decide whether this should be matrix or smatrix
+#     Q = SVector( (SVector(w,r,e) for e in mc.state_values)... )
 
-    grid = SSGrid(Q) × CGrid(((0.01,80.0,N_),))
+#     grid = SSGrid(Q) × CGrid(((0.01,80.0,N_),))
     
-    nmodel = DModel(
-        (;m, s, x, y, z, p),
-        grid,
-        P
-    )
+#     nmodel = DModel(
+#         (;m, s, x, y, z, p),
+#         grid,
+#         P
+#     )
 
-    # important to check we are not changing the type
-    @assert (typeof(nmodel) == typeof(model))
+#     # important to check we are not changing the type
+#     @assert (typeof(nmodel) == typeof(model))
 
-    return nmodel
+#     return nmodel
 
-end
+# end
 
 
-function transition(mod::typeof(model), m::SLArray, s::SLArray, x::SLArray, M::SLArray, p)
+function transition(mod::typeof(model), s::NamedTuple, x::NamedTuple, M::NamedTuple)
+    p = model.calibration
     y = exp(M.e)*M.w + (s.y-x.c)*(1+M.r)
-    return SLVector( (;y) )
+    return ( (;y) )
 end
 
 
-function arbitrage(mod::typeof(model), m::SLArray, s::SLArray, x::SLArray, M::SLArray, S::SLArray, X::SLArray, p)
-    eq = 1 - p.β*( X.c/x.c )^(-p.γ)*(1+M.r) - x.λ
+function arbitrage(mod::typeof(model), s::NamedTuple, x::NamedTuple, S::NamedTuple, X::NamedTuple)
+    p = model.calibration
+    eq = 1 - p.β*( X.c/x.c )^(-p.γ)*(1+S.r) - x.λ
     # @warn "The euler equation is satisfied only if c<w. If c=w, it can be strictly positive."
-    eq2 = x.λ ⟂ s.y-x.c
-    return SLVector( (;eq, eq2) )
+    # eq2 = x.λ ⟂ s.y-x.c
+    eq2 = x.λ ⫫ s.y-x.c
+    return ( (;eq, eq2) )
 end
 
 # function initial_guess(model, m::SLArray, s::SLArray, p)
@@ -145,22 +158,26 @@ end
 #     return SLVector(;c, λ)
 # end
 
-function initial_guess(model, m::SLArray, s::SLArray, p)
+function initial_guess(model, s::NamedTuple)
+    p = model.calibration
     # c = min( 1.0 + 0.01*(s.y - 1.0), s.y)
     # c = exp(m.e)*m.w *0.8
     c = s.y*0.9
-    return SLVector(;c)
+    return (;c)
 end
 
-function reward(model::typeof(model), s::SLArray, x::SLArray, p)
+function reward(model::typeof(model), s::NamedTuple, x::NamedTuple)
+    p = model.calibration
     c = x.c
     return c^(1-p.γ) / (1-p.γ)
 end
 
-function X(model, s::SLArray)
+function X(model, s::NamedTuple)
 
     p = model.calibration.p
     y = s.y
     ([0.0001], [y])
 
 end
+
+model

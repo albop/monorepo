@@ -29,11 +29,18 @@ function transition(model::YModel, s::SVector, x::SVector, M::SVector)
 end
 
 
+function transition(model::YModel, s::QP, x::SVector)
+
+    transition(model, s, QP(x,x))
+
+end
+
+
 
 #####
 ##### IID shocks
 #####
-
+import Base:rand
 
 function transition(model::YModel{<:MvNormal}, s::SVector, x::SVector)
     
@@ -46,7 +53,8 @@ function transition(model::YModel{<:MvNormal}, s::QP, x::QP)
     
     ss = s.val
     xx = x.val
-    transition(model, ss, xx)
+    S = transition(model, ss, xx)
+    QP(S,S)
 
 end
 
@@ -70,16 +78,10 @@ end
 
 function transition(model::YModel{<:MarkovChain}, s::QP, xx::QP)
     
-    # m = get_exo(model, s)
-    
-    # M___ = rand(model.exogenous, m)
-    # M = NamedTuple{variables(model.exogenous)}(M___)
-
-    
     i = s.loc[1] # i loc
     
-    j = 1
-    M =model.exogenous.Q[j] # TODO: should be random
+    j = sample(model.exogenous.P[i,:])
+    M = model.exogenous.Q[j] # TODO: should be random
 
     # M_v = model.exogenous.Q[j]   # vector of exogenous values
     v = NamedTuple{variables(model.states)}(s.val)
@@ -90,8 +92,13 @@ function transition(model::YModel{<:MarkovChain}, s::QP, xx::QP)
     
     S = merge(M_v, S_e)
 
+
+    svars = NoLib.variables(model.states)
+
+    SS = SVector( (S[v] for v in svars)...)
+
     # return (;loc=(j,SVector(S_e...)),  val=S)
-    return QP((j,SVector(S_e...)), S)
+    return QP((j,SVector(S_e...)), SS)
 
 
 end
@@ -102,7 +109,7 @@ function transition(model::YModel{<:MarkovChain}, s::NamedTuple, x::SVector)
     i,v = s.loc # i loc
     # s = s.val
 
-    j = 2    
+    j = sample(model.exogenous.P[i,:] ) 
     M_v = model.exogenous.Q[j]   # vector of exogenous values
 
     S_e =  transition(model, v, x, M_v)        # vector of endogenous values

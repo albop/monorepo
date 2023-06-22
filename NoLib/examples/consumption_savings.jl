@@ -3,11 +3,16 @@ using Plots
 
 import NoLib: transition, arbitrage, recalibrate, initial_guess, projection, equilibrium
 
-include("models/consumption_savings.jl")
+model = include("models/consumption_savings.jl")
+
+
+dmodel = NoLib.discretize(model)
 
 # check we can solve the model with default calibration
 
-@time sol_iti = NoLib.time_iteration(model; verbose=true, improve=true, T=5);
+@time sol = NoLib.time_iteration(dmodel; verbose=true, improve=false);
+
+@time sol_iti = NoLib.time_iteration(dmodel; verbose=true, improve=true);
 
 
 mem = NoLib.time_iteration_workspace(model)
@@ -15,22 +20,20 @@ mem = NoLib.time_iteration_workspace(model)
 @time sol_iti = NoLib.time_iteration_4(model, mem; verbose=true, improve=true);
 
 
-sol = sol_4
-
-x0 = sol.solution
-μ0 = NoLib.ergodic_distribution(model, x0)
 
 
+φ = sol.dr
 
-svec = [e[1] for e in model.grid[1,:]]
+svec = dmodel.grid[1,:]
+s_ = [e[1] for e in svec]
 
-pl1 = plot(svec, [e[1] for e in x0[1,:]])
-plot!(svec, [e[1] for e in x0[2,:]])
-plot!(svec, [e[1] for e in x0[3,:]])
+pl1 = plot(s_, [φ(1,s)[1] for s in svec])
+plot!(s_, [φ(2,s)[1] for s in svec])
+plot!(s_, [φ(3,s)[1] for s in svec])
 
-pl2 = plot(svec, [e[1] for e in μ0[1,:]])
-plot!(svec, [e[1] for e in μ0[2,:]])
-plot!(svec, [e[1] for e in μ0[3,:]])
+pl2 = plot(s_, [φ(1,s)[2] for s in svec])
+plot!(s_, [φ(2,s)[2] for s in svec])
+plot!(s_, [φ(3,s)[2] for s in svec])
 
 plot(pl1, pl2)
 

@@ -175,23 +175,41 @@ function qnwnorm(n::Vector{Int}, mu::Vector, sig2::Matrix = Matrix(I, length(n),
     return nodes, weights
 end
 
-struct MvNormal{names,B}
-    Σ::B
+struct MvNormal{names,n,n2}
+    μ::SVector{n,Float64}
+    Σ::SMatrix{n,n,Float64,n2}
 end
-MvNormal(names, Σ) = MvNormal{names, typeof(Σ)}(Σ)
+
+MvNormal(names, μ::SVector{n,Float64}, Σ::SMatrix{n,n, Float64,n2}) where n where n2 = MvNormal{names, n, n2}(μ,Σ)
 variables(mv::MvNormal{n}) where n = n
+
+MvNormal(names, Σ::SMatrix{n,n, Float64,n2}) where n where n2 = MvNormal{names,n,n2}(zero(SVector{n,Float64}),Σ)
+
+function MvNormal(names, μ::Vector, Σ::Matrix)
+    p = size(Σ,1)
+    v = SVector(μ...)
+    M = SMatrix{p,p,Float64,p*p}(Σ)
+    MvNormal(names, v, M)
+end
+
+
+
 import Base: rand
 import Distributions
 
+function sample(mv::MvNormal) where v where B<:SMatrix{d,d,Float64,q} where d where q
+    return "HI"
+end
 
-function Base.rand(mv::MvNormal{v,B}) where v where B<:SMatrix{d,d,Float64,q} where d where q
+
+function Base.rand(mv::MvNormal)
 
     dis = Distributions.MvNormal(Matrix(mv.Σ))
-    m = rand(dis)
+    m = Distributions.rand(dis)
     SVector(m...)
 end
 
-function Base.rand(mv::MvNormal{v,B}) where v where B<:SMatrix{1,1,Float64,1}
+function Base.rand(mv::MvNormal)
     return SVector(randn()*sqrt(mv.Σ[1,1]))
 end
 
@@ -253,9 +271,6 @@ function discretize(var::VAR1; n=3)
     if size(var.Σ, 1) == 1
         (;P, V) = rouwenhorst(n, ρ, sqrt(var.Σ[1,1]))
         mat = Matrix( Matrix(V')' )
-        println("Matrix")
-        println(mat)
-        println(typeof(mat))
         return MarkovChain(names, P,mat)
     end
 
@@ -275,7 +290,7 @@ function discretize(var::VAR1; n=3)
     P = kronecker( (mc.P for mc in components)... )
     V = cat( (mc.V for mc in components)...; dims=1)
 
-    return (V, C)
+    return (V, C) # TODO
     V = V*C.L'
 
     return  MarkovChain(names, P, V)

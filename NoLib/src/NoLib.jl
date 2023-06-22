@@ -11,7 +11,18 @@ module NoLib
     using .splines: interp
     
     ⟂(a,b) = min(a,b)
-    # ⟂ᶠ(a,b)
+    function ⫫(u,v)
+        sq = sqrt(u^2+v^2)
+        p =   (v<Inf ? (u+v-sq)/2 : u)
+        return p
+    end
+
+    #   #, SDiagonal(J_u), SDiagonal(J_v)
+    #     # J_u = (v<Inf ? (1.0 - u[i]./sq[i])/2 : 1) for i=1:d )
+    #     # J_v = (v<Inf ? (1.0 - v[i]./sq[i])/2 : 0) for i=1:d )
+    
+    #     return p  #, SDiagonal(J_u), SDiagonal(J_v)
+    # end
 
     import Base: getindex
 
@@ -45,6 +56,8 @@ module NoLib
         :(($v)[2])
     end
 
+    
+
     include("misc.jl")
     include("space.jl")
     include("grids.jl")
@@ -57,6 +70,7 @@ module NoLib
 
     include("time_iteration_accelerated.jl")
     include("vfi.jl")
+    include("utils.jl")
 
 
     # WIP heterogenous agents

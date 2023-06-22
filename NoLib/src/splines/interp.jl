@@ -29,7 +29,7 @@ getindex(A::Vector{Float64}, i::VectorizationBase.Vec{4,Int64}) = VectorizationB
 
 end
 
-@inline function interp(ranges::Tuple{Tuple{Float64, Float64, Int64},Tuple{Float64, Float64, Int64}}, values::AbstractArray{T}, x_1::U, x_2::U) where T where U where V
+@inline function interp(ranges::Tuple{Tuple{Float64, Float64, Int64},Tuple{Float64, Float64, Int64}}, values::AbstractArray{T}, x_1::U, x_2::U) where T where U
     # function interp(ranges::Tuple{Tuple{Float64, Float64, Int64}}, values, x) where T where U 
     
         a_1 = (ranges[1][1])

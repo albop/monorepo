@@ -1,4 +1,5 @@
 using LabelledArrays
+import NoLib: transition, arbitrage
 
 model = let 
 

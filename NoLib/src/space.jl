@@ -18,8 +18,10 @@ function CartesianSpace(;kwargs...)
     a = tuple((v[1] for v in values(kwargs))...)
     b = tuple((v[2] for v in values(kwargs))...)
     d = length(names)
-    return CartesianSpace{d, Val{names}}(a,b)
+    return CartesianSpace{d, names}(a,b)
 end
+
+getindex(cs::CartesianSpace{d}, ind::SVector{d, Float64}) where d = ind
 
 import Base: rand, in
 
@@ -34,7 +36,8 @@ Base.in(e::SVector, cs) = all( ( (e[i]<=cs.max[i])&(e[i]>=cs.min[i]) for i=1:len
 
 # TODO: why is this not working?
 # dims(dom::CartesianSpace{d,dims}) where d where dims = dims
-ddims(dom::CartesianSpace{d,dims}) where d where dims<:Val{t} where t = t
+
+ddims(dom::CartesianSpace{d,t}) where d where t = t
 
 dims(dom::CartesianSpace) = ddims(dom)
 ndims(dom::CartesianSpace{d, dims}) where d where dims = d
@@ -45,8 +48,10 @@ struct GridSpace{N,d,dims}
     points::SVector{N,SVector{d,Float64}}
 end
 GridSpace(v::SVector{N, SVector{d, Float64}}) where d where N = GridSpace{length(v), d, Val{(:i_,)}}(SVector(v...))
-GridSpace(v::Vector{SVector{d, Float64}}) where d where N = GridSpace{length(v), d, Val{(:i_,)}}(SVector(v...))
+GridSpace(v::Vector{SVector{d, Float64}}) where d = GridSpace{length(v), d, Val{(:i_,)}}(SVector(v...))
 GridSpace(names, v::SVector{k, SVector{d, Float64}}) where k where d = GridSpace{length(v), d, names}(v)
+
+getindex(gs::GridSpace, i::Int64) = gs.points[i]
 
 function rand(g::GridSpace) 
     i =  rand(1:length(g.points))   # loc
@@ -76,6 +81,8 @@ function rand(p::ProductSpace)
     )
     # (;loc=(a.loc,b.loc),val=SVector(a.val...,b.val...))
 end
+
+getindex(ps::ProductSpace, ind) = SVector(getindex(ps.spaces[1], ind[1])..., getindex(ps.spaces[2], ind[2])...)
 
 variables(p::ProductSpace) = dims(p)
 

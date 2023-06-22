@@ -18,7 +18,7 @@ get_controls(model::YModel) = variables(model.controls)
 # get_endo_states(model::Dolo)
 # get_exo_states(model::Dolo)
 
-discretize(cc::CartesianSpace; n=10) = CGrid( tuple(( (cc.min[i],cc.max[i], n) for i=1:length(cc.min))...) )
+# discretize(cc::CartesianSpace; n=10) = CGrid( tuple(( (cc.min[i],cc.max[i], n) for i=1:length(cc.min))...) )
 
 
 function Base.show(io::IO, m::YModel) 
@@ -69,3 +69,4 @@ function discretize(model::YModel{<:MarkovChain})
     grid = exo_grid × endo_grid
     return DYModel(model, grid, dvar)
 end
+
