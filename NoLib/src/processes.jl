@@ -150,6 +150,8 @@ function qnwnorm(n::Int)
     return nodes, weights
 end
 
+using LinearAlgebra: cholesky
+
 function qnwnorm(n::Vector{Int}, mu::Vector, sig2::Matrix = Matrix(I, length(n), length(n)))
     n_n, n_mu = length(n), length(mu)
 

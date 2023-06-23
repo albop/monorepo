@@ -6,10 +6,10 @@ module DoModel
     const Dolo = DoloYAML
 
     import NoLib
-    import NoLib: transition, arbitrage
+    import NoLib: transition, arbitrage, complementarities
     using StaticArrays
     using NoLib: CartesianSpace, GridSpace, ×, SGrid, CGrid
-
+    import NoLib: ⫫,⟂
 
 
 
@@ -154,6 +154,7 @@ module DoModel
     
     end
 
+    
     function transition(model::NoLib.YModel{<:NoLib.MvNormal,B,C,D,E,sS}, s::SVector, x::SVector, M::SVector) where B where C where D where E where sS<:DoloYAML.Model
 
         p = model.source.parameters
@@ -182,6 +183,63 @@ module DoModel
     
     end
 
+
+    function complementarities(model::NoLib.YModel{<:NoLib.MarkovChain, B, C, D, E, sS}, ss::NoLib.QP, x::SVector, Ef::SVector) where B where C where D where E where sS<:DoloYAML.Model
+        
+        s = ss.val
+
+        d = length(NoLib.variables(model.exogenous))
+        n = length(NoLib.variables(model.states))
+        
+        mm = SVector( (s[i] for i=1:d)... )
+        ss_ = SVector( (s[i] for i=(d+1):n)... )
+
+        p = model.source.parameters
+        lb = Dolo.controls_lb(model.source, mm, ss_,  p)
+
+        return Ef .⫫ (x-lb)
+
+    end
+
+
+    function complementarities(model::NoLib.YModel{<:NoLib.VAR1, B, C, D, E, sS}, ss::NoLib.QP, x::SVector, Ef::SVector) where B where C where D where E where sS<:DoloYAML.Model
+        
+        s = ss.val
+
+        d = length(NoLib.variables(model.exogenous))
+        n = length(NoLib.variables(model.states))
+
+        mm = SVector( (s[i] for i=1:d)... )
+        ss_ = SVector( (s[i] for i=(d+1):n)... )
+
+        p = model.source.parameters
+        lb = Dolo.controls_lb(model.source, mm, ss_,  p)
+        ub = Dolo.controls_ub(model.source, mm, ss_,  p)
+
+        return Ef .⫫ (x-lb)
+
+    end
+
+
+    function complementarities(model::NoLib.YModel{<:NoLib.MvNormal, B, C, D, E, sS}, ss::NoLib.QP, x::SVector, Ef::SVector) where B where C where D where E where sS<:DoloYAML.Model
+        
+
+        d = length(NoLib.variables(model.exogenous))
+        n = length(NoLib.variables(model.states))
+        m0 = zero(SVector{d,Float64})
+        
+        s = ss.val
+
+        p = model.source.parameters
+        lb = Dolo.controls_lb(model.source, m0, s,  p)
+        ub = Dolo.controls_ub(model.source, m0, s,  p)
+
+        # Ef
+        r = Ef .⫫ (x-lb)
+        r = (-Ef) .⫫ (ub-x)
+        -r
+
+    end
 
 
 end # module DoloModel

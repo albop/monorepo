@@ -80,7 +80,7 @@ end
 
 
 
-
+using NoLib
 
 # 
 model = include("NoLib/examples/models/consumption_savings.jl")
@@ -96,12 +96,56 @@ wksp = NoLib.time_iteration_workspace(dmodel);
 # @time sol =  NoLib.time_iteration(dmodel; verbose=true, improve=true);
 
 
-s0 = rand(model.states)
 
-function g(dmodel, s0, xx, φ)
-    r = φ(s0.loc)
-    sum(r)
+using NoLib
+using  DoModel
+
+model = DoModel.DoloModel("DoloYAML/examples/models/consumption_savings_iid.yaml")
+dmodel = NoLib.discretize(model)
+function NoLib.initial_guess(dmodel::typeof(dmodel))
+    NoLib.GVector(
+        dmodel.grid,
+        [SVector(min(0.9*qs.val[1], 1.0+0.05*(qs.val[1]-1))) for  qs in NoLib.enum(dmodel.grid)]
+    )
 end
 
+wkspc =  NoLib.time_iteration_workspace(dmodel);
+sol = NoLib.time_iteration(dmodel, wkspc; verbose=true)
 
-@time g(dmodel, s0, xx, φ)
+
+
+
+using Dolo
+dm = Dolo.yaml_import("DoloYAML/examples/models/consumption_savings_iid.yaml")
+Dolo.time_iteration(dm)
+
+
+
+
+
+
+using  DoModel
+model = DoModel.DoloModel("DoloYAML/examples/models/sudden_stop.yaml")
+dmodel = NoLib.discretize(model)
+wkspc =  NoLib.time_iteration_workspace(dmodel);
+sol = NoLib.time_iteration(dmodel, wkspc; verbose=true);
+
+using Dolo
+dm = Dolo.yaml_import("DoloYAML/examples/models/sudden_stop.yaml")
+Dolo.time_iteration(dm)
+
+
+
+
+
+
+
+using StaticArrays
+m,s,x,p = model.source.calibration[:exogenous,:states,:controls,:parameters]
+
+m_ = SVector(m...)
+s_ = SVector(s...)
+x_ = SVector(x...)
+p_ = SVector(p...)
+
+DoModel.Dolo.controls_lb(model.source, m_,s_,p_)

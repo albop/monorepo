@@ -34,7 +34,7 @@ end
 function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector)  where M<:NoLib.YModel{<:NoLib.MvNormal} where T<:QP
 
 
-    (i,_) = ss.loc
+    # ind = ss.loc
     s_ = ss.val
     
 

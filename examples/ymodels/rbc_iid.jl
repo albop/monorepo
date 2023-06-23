@@ -25,11 +25,13 @@ model = let
     c = y - i
     χ =  w/c^σ/n^η
 
+    sig_z = 0.016
+
     calibration = (;β, σ, η, δ, α, ρ, z, n, k, w, y, i, c, χ)
 
 
     states = NoLib.CartesianSpace(;
-        :z => (-0.01, 0.01),
+        :z => (-2*sig_z/(1-ρ^2)^0.5,  2*sig_z/(1-ρ^2)^0.5),
         :k => ( k*0.5,  k*1.5)
     )
 
@@ -38,7 +40,7 @@ model = let
         :n => (0.0, 1.5)
     )
     
-    Σ = @SMatrix [0.001 ;]
+    Σ = @SMatrix [sig_z^2;]
     process = NoLib.MvNormal( (:ϵ,), Σ )
 
     NoLib.YModel(name, states, controls, process, calibration)

@@ -1,11 +1,20 @@
-a = 4
 
-import DoloYAML
-
-model = DoloYAML.yaml_import("DoloYAML/examples/models/rbc.yaml")
-
-
+import DoModel
 using NoLib
+
+model = DoModel.DoloModel("examples/ymodels/rbc_iid.yaml")
+dmodel = NoLib.discretize(model)
+NoLib.time_iteration(dmodel; verbose=true, interp_mode=:cubic)
+
+
+
+
+
+
+model = include("examples/ymodels/rbc_iid.jl")
+dmodel = NoLib.discretize(model)
+NoLib.time_iteration(dmodel; verbose=true)
+
 import Dolo
 
 import DoModel

@@ -11,10 +11,6 @@ struct CGrid{d} <: AGrid{d}
 end
 
 
-# enum(grid::CGrid) = (
-#     QP((c[1],c[2]), grid[c]) for c in CartesianIndices((length(grid.g1), length(grid.g2)))
-# )
-
 getindex(g::CGrid{d}, inds::Vararg{Int64,d}) where d = SVector{d}(
     ( 
         ( g.ranges[i][1] + (g.ranges[i][2]-g.ranges[i][1])*( (inds[i]-1)/(g.ranges[i][3]-1)) )
