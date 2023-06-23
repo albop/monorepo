@@ -197,19 +197,15 @@ end
 import Base: rand
 import Distributions
 
-function sample(mv::MvNormal) where v where B<:SMatrix{d,d,Float64,q} where d where q
-    return "HI"
-end
 
-
-function Base.rand(mv::MvNormal)
+function Base.rand(mv::MvNormal{names, n}) where names where n
 
     dis = Distributions.MvNormal(Matrix(mv.Σ))
     m = Distributions.rand(dis)
     SVector(m...)
 end
 
-function Base.rand(mv::MvNormal)
+function Base.rand(mv::MvNormal{names, 1}) where names
     return SVector(randn()*sqrt(mv.Σ[1,1]))
 end
 

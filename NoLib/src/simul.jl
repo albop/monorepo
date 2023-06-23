@@ -1,7 +1,7 @@
 
 ### transition function
 
-function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<:NoLib.VAR1} where T<:QP
+function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:Union{NoLib.YModel{<:NoLib.VAR1},NoLib.YModel{<:NoLib.MarkovChain}}  where T<:QP
 
 
     (i,_) = ss.loc
@@ -9,9 +9,6 @@ function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<
     
 
     # TODO: replace following block by one nonallocating function
-
-    # m,s = NoLib.split_states(dmodel.model, s_)
-
     Q = dmodel.dproc.Q
     P = dmodel.dproc.P
 
@@ -33,38 +30,6 @@ function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector) where M<:NoLib.YModel{<
 
 end
 
-
-function τ(dmodel::NoLib.DYModel{M}, ss::QP, a::SVector) where M<:NoLib.YModel{<:NoLib.MarkovChain}
-
-
-    (i,_) = ss.loc
-    s_ = ss.val
-    
-
-    # TODO: replace following block by one nonallocating function
-
-    # m,s = NoLib.split_states(dmodel.model, s_)
-
-    Q = dmodel.dproc.Q
-    P = dmodel.dproc.P
-
-    it = (
-        (
-            P[i,j],
-            let 
-                S_exo = Q[j]
-                S_endo = SVector(transition(dmodel.model, s_, a, Q[j])...)
-                S = SVector(S_exo..., S_endo...)
-                QP((j,S_endo),S)
-                # (loc=(j,S_endo),val=S)
-            end
-        )
-        for j in 1:size(P, 2)
-    )
-
-    it
-
-end
 
 function τ(dmodel::NoLib.DYModel{M}, ss::T, a::SVector)  where M<:NoLib.YModel{<:NoLib.MvNormal} where T<:QP
 

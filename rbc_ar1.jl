@@ -1,4 +1,4 @@
-using LabelledArrays
+using StaticArrays
 import NoLib: transition, arbitrage
 
 model = let 
@@ -6,7 +6,7 @@ model = let
     name = :rbc_ar1
 
     # calibrate some parameters
-    β = 0.9
+    β = 0.99
     σ = 5
     η = 1
     δ = 0.025

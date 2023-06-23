@@ -6,7 +6,7 @@ using StaticArrays
 using LabelledArrays
 using NoLib: SGrid, CGrid, PGrid, GArray, YModel
 import NoLib: ×, ⟂, ⫫
-import NoLib: transition, arbitrage, recalibrate, initial_guess, projection, equilibrium, complementarities
+import NoLib: transition, arbitrage, recalibrate, initial_guess, projection, equilibrium
 import NoLib: X, reward
 import NoLib: GridSpace, CartesianSpace
 
@@ -67,6 +67,7 @@ model = let
 
     controls = CartesianSpace(;
         c=(0,Inf),
+        λ=(0,Inf)
     )
     exogenous = NoLib.MarkovChain(
         (:w,:r,:e), P,Q
@@ -135,23 +136,19 @@ end
 
 
 function transition(mod::typeof(model), s::NamedTuple, x::NamedTuple, M::NamedTuple)
-    p = mod.calibration
+    p = model.calibration
     y = exp(M.e)*M.w + (s.y-x.c)*(1+M.r)
     return ( (;y) )
 end
 
 
 function arbitrage(mod::typeof(model), s::NamedTuple, x::NamedTuple, S::NamedTuple, X::NamedTuple)
-    p = mod.calibration
-    eq = 1 - p.β*( X.c/x.c )^(-p.γ)*(1+S.r) # - x.λ
+    p = model.calibration
+    eq = 1 - p.β*( X.c/x.c )^(-p.γ)*(1+S.r) - x.λ
     # @warn "The euler equation is satisfied only if c<w. If c=w, it can be strictly positive."
     # eq2 = x.λ ⟂ s.y-x.c
-    (eq,)
-end
-
-function complementarities(mod::typeof(model), s::NamedTuple, x::NamedTuple, Fv::SVector)
-    eq = Fv[1] ⫫ s.y-x.c
-    (eq,)
+    eq2 = x.λ ⫫ s.y-x.c
+    return ( (;eq, eq2) )
 end
 
 # function initial_guess(model, m::SLArray, s::SLArray, p)
@@ -161,23 +158,23 @@ end
 #     return SLVector(;c, λ)
 # end
 
-function initial_guess(mod::typeof(model), s::NamedTuple)
-    p = mod.calibration
+function initial_guess(model, s::NamedTuple)
+    p = model.calibration
     # c = min( 1.0 + 0.01*(s.y - 1.0), s.y)
     # c = exp(m.e)*m.w *0.8
     c = s.y*0.9
     return (;c)
 end
 
-function reward(mod::typeof(model), s::NamedTuple, x::NamedTuple)
-    p = mod.calibration
+function reward(model::typeof(model), s::NamedTuple, x::NamedTuple)
+    p = model.calibration
     c = x.c
     return c^(1-p.γ) / (1-p.γ)
 end
 
-function X(mod::typeof(model), s::NamedTuple)
+function X(model, s::NamedTuple)
 
-    p = mod.calibration.p
+    p = model.calibration.p
     y = s.y
     ([0.0001], [y])
 

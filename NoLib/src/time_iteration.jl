@@ -7,19 +7,25 @@
 #     tot
 # end
 
-F(model, s, x::SVector, φ::Policy) = 
-    sum(
+F(model, s, x::SVector, φ::Policy) = let
+    r = sum(
          w*arbitrage(model,s,x,S,φ(S)) 
          for (w,S) in τ(model, s, x)
     )
+    # r
+    complementarities(model.model, s,x,r)
+end
 
 
 
-F(model, s, x::SVector, φ::Union{GArray, DFun}) = 
-    sum(
+F(model, s, x::SVector, φ::Union{GArray, DFun}) = let
+    r = sum(
          w*arbitrage(model,s,x,S,φ(S)) 
          for (w,S) in τ(model, s, x)
     )
+    # r
+    complementarities(model.model, s,x,r)
+end
 
 
 F(model, controls::GArray, φ::Union{GArray, DFun}) =

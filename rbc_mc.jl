@@ -1,11 +1,13 @@
-import NoLib: transition
+
+using StaticArrays
+import NoLib: transition, arbitrage
 
 model = let 
 
     name = :rbc_mc
 
     # calibrate some parameters
-    β = 0.9
+    β = 0.99
     σ = 5
     η = 1
     δ = 0.025
@@ -63,7 +65,7 @@ function NoLib.transition(model::typeof(model), s::NamedTuple, x::NamedTuple, M:
     # Z = e.Z
     K = s.k * (1-δ) + x.i
 
-    (;K,)  ## This is only the endogenous state
+    (;k=K,)  ## This is only the endogenous state
 
 end
 

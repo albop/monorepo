@@ -1,3 +1,5 @@
+using StaticArrays
+import NoLib: arbitrage, transition
 
 model = let 
 
@@ -5,7 +7,7 @@ model = let
 
 
     # calibrate some parameters
-    β = 0.9
+    β = 0.99
     σ = 5
     η = 1
     δ = 0.025
@@ -27,7 +29,7 @@ model = let
 
 
     states = NoLib.CartesianSpace(;
-        :z => (-0.1, 0.1),
+        :z => (-0.01, 0.01),
         :k => ( k*0.5,  k*1.5)
     )
 
