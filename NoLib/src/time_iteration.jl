@@ -103,9 +103,9 @@ include("dev_L2.jl")
 using LinearMaps
 
 
-function time_iteration_workspace(model; interp_mode=:linear)
+function time_iteration_workspace(dmodel; interp_mode=:linear)
 
-    x0 = (NoLib.initial_guess(model))
+    x0 = (NoLib.initial_guess(dmodel))
     x1 = deepcopy(x0)
     x2 = deepcopy(x0)
     r0 = deepcopy(x0)
@@ -113,10 +113,10 @@ function time_iteration_workspace(model; interp_mode=:linear)
     N = length(dx)
     n = length(dx.data[1])
     J = GArray(
-        model.grid,
+        dmodel.grid,
         zeros(SMatrix{n,n,Float64,n*n}, N)
     )
-    φ = DFun(model, x0; interp_mode=interp_mode)
+    φ = DFun(dmodel.model.states, x0; interp_mode=interp_mode)
     return (;x0, x1, x2, r0, dx, J, φ)
 end
 

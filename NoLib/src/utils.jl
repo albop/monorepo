@@ -1,10 +1,86 @@
-function tabulate(model::YModel; kwargs...)
-    dis = NoLib.discretize(model.states)
+function tabulate(model::YModel, dr, key::Symbol, K=100, kwargs...)
+    s0 = calibrated(QP, model, :states)
+    states = model.states
+    # s0 = QP(states; kwargs...)
+    if typeof(states) <: CartesianSpace
+        vars = variables(states)
+        i = findfirst(u->u==key, vars)
+        a = states.min[i] 
+        b = states.max[i] 
+    elseif typeof(states) <: ProductSpace
+        vars = variables(states.spaces[2])
+        i = findfirst(u->u==key, vars)
+        a = states.min[i] 
+        b = states.max[i] 
+    end
+    vals = []
+    rr = range(a,b;length=K)
+    for v in rr
+        dd = Dict(key=>v)
+        s = QP(states, s0; dd...)
+        x = dr(s)
+        push!(vals, (s,x))
+    end
+    H = [SVector(e[1].loc..., e[2]...) for e in vals]
+    M = vcat( (e' for e in H)... )
+    vars = cat(variables(model.states)..., variables(model.controls)...; dims=1)
+    dd = Dict(
+        key => rr,
+        :V => vars
+    )
+    AxisArray(M; dd...)
+end
+
+function tabulate(dr::Union{NoLib.Fun, NoLib.DFun}, key::Symbol, s0::QP, K=100; kwargs...)
+    states = dr.domain
+    # s0 = QP(states; kwargs...)
+    if typeof(states) <: CartesianSpace
+        vars = variables(states)
+        i = findfirst(u->u==key, vars)
+        a = states.min[i] 
+        b = states.max[i] 
+    elseif typeof(states) <: ProductSpace
+        vars = variables(states.spaces[2])
+        i = findfirst(u->u==key, vars)
+        a = states.min[i] 
+        b = states.max[i] 
+    end
+    vals = []
+    rr = range(a,b;length=K)
+    for v in rr
+        dd = Dict(key=>v)
+        s = QP(states, s0; dd...)
+        x = dr(s)
+        push!(vals, (s,x))
+    end
+    H = [SVector(e[1].loc..., e[2]...) for e in vals]
+    M = vcat( (e' for e in H)... )
+    vars = range(1, size(M,2))
+    dd = Dict(
+        key => rr,
+        :V => vars
+    )
+    AxisArray(M; dd...)
+    # TODO:  to label columns, the DFun, needs to know output space
 end
 
 
 
-function calibrated_values(model::YModel, group)
+function calibrated(::Type{QP}, model::YModel, group)
+    @assert group==:states
+    sv = calibrated(model, :states)
+    if typeof(model.states) <: CartesianSpace
+        QP(sv, sv)
+    elseif typeof(model.states) <: ProductSpace
+        d = length(variables(model.exogenous))
+        vals = SVector( (sv[i] for i=(d+1:length(sv)))...)
+        loc = (1,vals)
+        QP(loc, sv)
+        # or QP(loc, model.states[loc]) ???
+    end
+end
+
+function calibrated(model::YModel, group)
     if group==:states
         vars = variables(model.states)
     elseif group==:controls
@@ -17,10 +93,10 @@ function calibrated_values(model::YModel, group)
     SVector( (get(model.calibration,v,NaN) for v in vars)... )
 end
 
-function calibrated_values(model::YModel)
-    states = calibrated_values(model, :states)
-    controls = calibrated_values(model, :controls)
-    exogenous = calibrated_values(model, :exogenous)
+function calibrated(model::YModel)
+    states = calibrated(model, :states)
+    controls = calibrated(model, :controls)
+    exogenous = calibrated(model, :exogenous)
     (;states, controls, exogenous)
 end
 

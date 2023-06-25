@@ -8,7 +8,7 @@ struct CartesianSpace{d,dims}
     max::NTuple{d, Float64}
 end
 
-
+const CSpace = CartesianSpace
 
 CartesianSpace(a::Tuple{Float64}, b::Tuple{Float64}) = CartesianSpace{length(a), Val{(:x,)}}(a,b)
 CartesianSpace(a::Tuple{Float64, Float64}, b::Tuple{Float64, Float64}) = CartesianSpace{length(a), Val{(:x_1, :x_2)}}(a,b)
@@ -23,9 +23,9 @@ end
 
 getindex(cs::CartesianSpace{d}, ind::SVector{d, Float64}) where d = ind
 
-import Base: rand, in
+import Base: in
 
-function Base.rand(cs::CartesianSpace) 
+function draw(cs::CartesianSpace) 
     loc = SVector(( (cs.min[i] + rand()*(cs.max[i]-cs.min[i])) for i=1:length(cs.min) )...)
     val = loc
     QP(loc,val)
@@ -47,13 +47,16 @@ variables(c::CartesianSpace) = dims(c)
 struct GridSpace{N,d,dims}
     points::SVector{N,SVector{d,Float64}}
 end
+
+const GSpace = GridSpace
+
 GridSpace(v::SVector{N, SVector{d, Float64}}) where d where N = GridSpace{length(v), d, Val{(:i_,)}}(SVector(v...))
 GridSpace(v::Vector{SVector{d, Float64}}) where d = GridSpace{length(v), d, Val{(:i_,)}}(SVector(v...))
 GridSpace(names, v::SVector{k, SVector{d, Float64}}) where k where d = GridSpace{length(v), d, names}(v)
 
 getindex(gs::GridSpace, i::Int64) = gs.points[i]
 
-function rand(g::GridSpace) 
+function draw(g::GridSpace) 
     i =  rand(1:length(g.points))   # loc
     v = g.points[i]                 # val
     QP(i,v)
@@ -72,7 +75,9 @@ end
 
 ProductSpace(A,B) = ProductSpace((A,B))
 
-function rand(p::ProductSpace)
+
+
+function draw(p::ProductSpace)
     a = rand(p.spaces[1])
     b = rand(p.spaces[2])
     QP(
@@ -86,7 +91,80 @@ getindex(ps::ProductSpace, ind) = SVector(getindex(ps.spaces[1], ind[1])..., get
 
 variables(p::ProductSpace) = dims(p)
 
+import LinearAlgebra: cross
 cross(A::DA, B::DB) where DA<:GridSpace where DB<:CartesianSpace = ProductSpace{DA, DB}((A,B))
+
+# (×)(A::DA, B::DB) where DA<:GridSpace where DB<:CartesianSpace = cross(A,B)
+
 ndims(p::P) where P<:ProductSpace = ndims(p.spaces[1]) + ndims(p.spaces[2])
 dims(p::P) where P<:ProductSpace = tuple(dims(p.spaces[1])..., dims(p.spaces[2])...)
 
+
+
+
+# construct QP poitns
+
+function dropnames(namedtuple::NamedTuple, names::Tuple{Vararg{Symbol}}) 
+    keepnames = Base.diff_names(Base._nt_names(namedtuple), names)
+   return NamedTuple{keepnames}(namedtuple)
+end
+
+
+QP(space::CartesianSpace{d}; values...) where d = let
+    s_ =zero(SVector{d,Float64})*NaN
+    s0 = QP(s_,s_)
+    QP(space, s0; values...)
+end
+
+function QP(space::CartesianSpace, s0::QP; values...)
+
+    vars = NoLib.variables(space)
+
+    @assert (keys(values) ⊆ vars)
+
+    nloc = NamedTuple{vars}(s0.loc)
+    mloc = merge(nloc, values)
+    loc = SVector(mloc...)
+
+    return QP(loc, loc)
+
+end
+
+
+QP(space::GridSpace{d}; i_=1) where d = QP(i_,space[i_])
+
+
+
+function QP(space::ProductSpace{<:GridSpace{d1},<:CartesianSpace{d2}}; values...) where d1 where d2
+    i0 = 1
+    m_ = space.spaces[1][i0]
+    s_ =zero(SVector{d2,Float64})*NaN
+    s0 = QP((i0,s_),SVector(m_...,s_...))
+    QP(space, s0; values...)
+end
+
+function QP(space::ProductSpace{<:GridSpace{d1},<:CartesianSpace{d2}}, s0::QP; values...) where d1 where d2
+
+    vars = NoLib.variables(space.spaces[2])
+
+    @assert (keys(values) ⊆ tuple(:i_,vars...))
+    
+    if hasproperty(values,:i_)
+        i_ = values.i_
+        vals = dropnames(t, (:i_,))
+    else
+        i_ = s0.loc[1]
+        vals = values
+    end
+
+
+
+    nloc = NamedTuple{vars}(s0.loc[2])
+    mloc = merge(nloc, vals)
+
+    loc = (i_, SVector(mloc...))
+    vv = space[loc]
+
+    return QP(loc, vv)
+
+end

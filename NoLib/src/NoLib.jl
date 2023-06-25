@@ -17,6 +17,7 @@ module NoLib
         return p
     end
 
+
     #   #, SDiagonal(J_u), SDiagonal(J_v)
     #     # J_u = (v<Inf ? (1.0 - u[i]./sq[i])/2 : 1) for i=1:d )
     #     # J_v = (v<Inf ? (1.0 - v[i]./sq[i])/2 : 0) for i=1:d )
@@ -78,6 +79,14 @@ module NoLib
     # include("hetag_ss.jl")
     # include("jac.jl")
     # include("gauss_elim.jl")
+
+
+    module build
+        using NoLib: transition, arbitrage
+        using NoLib: GSpace, CSpace
+        export CSpace, GSpace, transition, arbitrage
+    end
+
 
 end # module
 
