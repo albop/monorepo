@@ -9,8 +9,19 @@ using NoLib
 using StaticArrays
 
 
+model = include("examples/ymodels/neoclassical.jl")
 
-@assert isbits(model_ar1)
+dmodel = NoLib.discretize(model)
+
+x0 = NoLib.calibrated(dmodel.model, :controls)
+xx = NoLib.GVector(dmodel.grid, [x0 for s in dmodel.grid])
+states = dmodel.model.states
+φ = NoLib.DFun(states, xx)
+
+
+sol = NoLib.time_iteration(dmodel, verbose=false, improve=true)
+
+
 
 
 ################

@@ -27,8 +27,8 @@ struct DFun{Dom, Gar, Itp, vars}
     itp::Itp
 end
 
-vvars(::DFun{D,G,I,vars}) where D where G where I where vars<:Val{t} where t = t
-vars(dfun::DFun) = vvars(dfun)
+vars(::DFun{D,G,I,vs}) where D where G where I where vs = vs
+
 
 DFun(domain, values, itp, vars) = DFun{typeof(domain), typeof(values), typeof(itp), Val{vars}}(domain, values, itp)
 function DFun(domain, values, itp)
@@ -43,7 +43,7 @@ function DFun(domain, values, itp)
 end
 # DFun(domain, values, itp) = begin @assert ndims(domain)==1 ; DFun(domain, values, itp, (:y,)) end
 # works for cartesian only
-function DFun(domain, values::GVector{G,V}; interp_mode=:linear) where V where G<:CGrid
+function DFun(states, values::GVector{G,V}; interp_mode=:linear) where V where G<:CGrid
     vv = reshape(values.data, (e[3] for e in values.grid.ranges)...)
     if interp_mode == :linear
         itp = SplineInterpolator(values.grid.ranges; values=vv, k=1)
@@ -52,12 +52,10 @@ function DFun(domain, values::GVector{G,V}; interp_mode=:linear) where V where G
     else
         throw("Unkown interpolation mode $(interp_mode)")
     end
-    return DFun(domain, values, itp)
+    return DFun(states, values, itp)
 end
 
-function DFun(dmodel::ADModel, values::GVector{G,V}; interp_mode=:linear) where V where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid
-
-    domain = dmodel.model.states
+function DFun(states, values::GVector{G,V}; interp_mode=:linear) where V where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid
     
     if interp_mode == :linear
         k=1
@@ -70,7 +68,7 @@ function DFun(dmodel::ADModel, values::GVector{G,V}; interp_mode=:linear) where 
     # TODO: check values.data[i,:]
     sz = (e[3] for e in values.grid.g2.ranges)
     itps = tuple( (SplineInterpolator(values.grid.g2.ranges;  values=reshape(values[i,:], sz...),k=k)  for i=1:length(values.grid.g1)  )...)
-    return DFun(domain, values, itps)
+    return DFun(states, values, itps)
 
 end
 
@@ -164,31 +162,31 @@ end
 #     DFun{d, dt, gt}(dom, gar)
 # end
 
-function discretize(space::D2; n=ntuple(u->15,d))  where  D2<:CartesianSpace{d} where d
+# function discretize(space::D2; n=ntuple(u->15,d))  where  D2<:CartesianSpace{d} where d
     
-    if false in (isfinite.(space.max) .& isfinite.(space.min))
-        # TODO : improve
-        throw(DomainError("Impossible to discretize space with infinite bounds."))
-    end
+#     if false in (isfinite.(space.max) .& isfinite.(space.min))
+#         # TODO : improve
+#         throw(DomainError("Impossible to discretize space with infinite bounds."))
+#     end
 
-    grid = CGrid(
-        tuple( 
-            ( (space.min[i], space.max[i], n[i]) for i=1:ndims(space) )...
-        )
-    )
+#     grid = CGrid(
+#         tuple( 
+#             ( (space.min[i], space.max[i], n[i]) for i=1:ndims(space) )...
+#         )
+#     )
 
-    return grid
+#     return grid
 
-end
+# end
 
 
-function discretize(dom::ProductSpace{D1,D2}; n=ntuple(u->15,ndims(dom))) where D1<:GridSpace where  D2<:CartesianSpace
-    grid_a = SGrid(dom.spaces[1].points)
-    g_b = dom.spaces[2]
-    grid_b = CGrid(
-        tuple( 
-            ( (g_b.min[i], g_b.max[i], n[i]) for i=1:ndims(g_b) )...
-        )
-    )
-    return grid_a × grid_b
-end
+# function discretize(dom::ProductSpace{D1,D2}; n=ntuple(u->15,ndims(dom))) where D1<:GridSpace where  D2<:CartesianSpace
+#     grid_a = SGrid(dom.spaces[1].points)
+#     g_b = dom.spaces[2]
+#     grid_b = CGrid(
+#         tuple( 
+#             ( (g_b.min[i], g_b.max[i], n[i]) for i=1:ndims(g_b) )...
+#         )
+#     )
+#     return grid_a × grid_b
+# end

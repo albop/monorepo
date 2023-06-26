@@ -10,8 +10,8 @@ end
 
 const CSpace = CartesianSpace
 
-CartesianSpace(a::Tuple{Float64}, b::Tuple{Float64}) = CartesianSpace{length(a), Val{(:x,)}}(a,b)
-CartesianSpace(a::Tuple{Float64, Float64}, b::Tuple{Float64, Float64}) = CartesianSpace{length(a), Val{(:x_1, :x_2)}}(a,b)
+CartesianSpace(a::Tuple{Float64}, b::Tuple{Float64}) = CartesianSpace{length(a), (:x,)}(a,b)
+CartesianSpace(a::Tuple{Float64, Float64}, b::Tuple{Float64, Float64}) = CartesianSpace{length(a), (:x_1, :x_2)}(a,b)
 
 function CartesianSpace(;kwargs...)
     names = tuple(keys(kwargs)...)
@@ -50,8 +50,8 @@ end
 
 const GSpace = GridSpace
 
-GridSpace(v::SVector{N, SVector{d, Float64}}) where d where N = GridSpace{length(v), d, Val{(:i_,)}}(SVector(v...))
-GridSpace(v::Vector{SVector{d, Float64}}) where d = GridSpace{length(v), d, Val{(:i_,)}}(SVector(v...))
+GridSpace(v::SVector{N, SVector{d, Float64}}) where d where N = GridSpace{length(v), d, (:i_,)}(SVector(v...))
+GridSpace(v::Vector{SVector{d, Float64}}) where d = GridSpace{length(v), d, (:i_,)}(SVector(v...))
 GridSpace(names, v::SVector{k, SVector{d, Float64}}) where k where d = GridSpace{length(v), d, names}(v)
 
 getindex(gs::GridSpace, i::Int64) = gs.points[i]
@@ -64,7 +64,6 @@ function draw(g::GridSpace)
 end
 
 ndims(gd::GridSpace{N,d,dims}) where N where d where dims = d
-ddims(gd::GridSpace{N,d,dims}) where N where d where dims<:Val{e} where e = e
 ddims(gd::GridSpace{N,d,dims}) where N where d where dims = dims
 dims(gd::GridSpace) = ddims(gd)
 
@@ -168,3 +167,59 @@ function QP(space::ProductSpace{<:GridSpace{d1},<:CartesianSpace{d2}}, s0::QP; v
     return QP(loc, vv)
 
 end
+
+
+### discretization
+
+
+
+const DEFAULT_GRID_NPOINTS = 20
+
+# discretize(space::CSpace; kwargs...)  = discretize(space, DEFAULT_GRID_NPOINTS)
+# discretize(space::CSpace{d}, n::Int) where d = discretize(space, tuple( (n for i=1:d)...))
+
+function discretize(space::CSpace{d}, n::NTuple{d, <:Int}) where d
+    CGrid(
+        # variables(space),
+        tuple( ((space.min[i], space.max[i], n[i]) for i=1:d)... )
+    )
+end
+
+function discretize(space::CSpace, n=DEFAULT_GRID_NPOINTS; nvals...)
+    nn = tuple( ( get(nvals, v, n)   for v in variables(space) )...)
+    discretize(space, nn)
+end
+
+#### 
+#### Discretize Grid Spaces
+####
+
+
+
+#### 
+#### Discretize Product Spaces
+####
+
+###
+### CSpace × CSpace
+
+function discretize(ps::ProductSpace{<:CSpace{d1}, <:CSpace{d2}}, n::NTuple{d1d2, <:Int}) where d1 where d2 where d1d2
+    @assert d1d2==d1+d2
+    s1,s2 = ps.spaces
+    n1 = tuple((n[i] for i=1:d1)...)
+    n2 = tuple((n[i] for i=(d1+1):(d1+d2))...)
+    g1 = discretize(s1,n1)
+    g2 = discretize(s2,n2)
+    ProductGrid(g1, g2)
+end
+
+function discretize(ps::ProductSpace{<:CSpace{d1}, <:CSpace{d2}}, n::Int) where d1 where d2
+    nn = tuple( (n for i=1:(d1+d2))...)
+    discretize(ps, nn)
+end
+
+function discretize(ps::ProductSpace; kwargs...)
+    println("J")
+    ProductGrid(discretize(ps.spaces[1]; kwargs...), discretize(ps.spaces[2]; kwargs...))
+end
+

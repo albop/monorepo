@@ -49,3 +49,10 @@ end
 # d2 = NoLib.discretize(n2)
 # sol2 = NoLib.time_iteration(d2)
 
+using NoLib
+
+mod = include("examples/ymodels/rbc_ar1.jl")
+
+ee = NoLib.discretize(mod)
+
+NoLib.name(mod)

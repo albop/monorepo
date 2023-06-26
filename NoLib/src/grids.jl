@@ -49,11 +49,13 @@ function SGrid(v::Vector)
 end
 
 
-struct PGrid{G1, G2, d} <: AGrid{d}
+struct ProductGrid{G1, G2, d} <: AGrid{d}
     g1::G1
     g2::G2
     # points::Vector{SVector{d, Float64}}
 end
+
+const PGrid = ProductGrid
 
 getindex(g::SGrid{d}, ::Colon) where d = g.points
 getindex(g::SGrid{d}, i::Int) where d = g.points[i]
@@ -102,31 +104,6 @@ import Base: setindex!
 
 # using ResumableFunctions
 
-
-function iti(pg::PGrid) 
-    ( ((i,j),(v1,v2)) for ((i,v1), (j,v2)) in Base.Iterators.product( (enumerate(pg.g1)),(enumerate( pg.g2)) ) )
-end
-
-
-# iti(cg::CGrid{1}) = enumerate(SVector(el) for el in iti2(cg))
-
-# function iti(pg::PGrid) 
-#     ( ((i,j),(v1,v2)) for ((i,v1), (j,v2)) in Base.Iterators.product( (iti( pg.g1)), (iti(pg.g2)) ) )
-# end
-
-# enum(pg::PGrid) =  ( ( (i,j), SVector(v1...,v2...) )
-#             for ((i,v1), (j,v2)) in Base.Iterators.product( enumerate(pg.g1), enumerate(pg.g2)) )
-
-
-# function enum(pg::PGrid; linear_index=false) 
-#     if !linear_index
-#         ( ( (i,j), SVector(v1...,v2...) )
-#             for ((i,v1), (j,v2)) in Base.Iterators.product( (iti( pg.g1)), (iti(pg.g2)) ) )
-
-#     else
-#         ( ( to__linear_index(pg,(i,j)), SVector(v1...,v2...) )
-#             for ((i,v1), (j,v2)) in Base.Iterators.product( (iti( pg.g1)), (iti(pg.g2)) ) )        end
-# end
 
 length(pg::PGrid{G1, G2, d}) where G1 where G2 where d = length(pg.g1)*length(pg.g2)
 length(sg::SGrid{d}) where d = length(sg.points)
@@ -275,66 +252,51 @@ end
 
 
 
-struct EELM{I,V,O}
-    value::V
-    index::I
-    object::O
-end
+# struct EELM{I,V,O}
+#     value::V
+#     index::I
+#     object::O
+# end
 
 # EELM(object) = EELM(Base.iterate(object)...,object)
 ## could be special cased for particular objects
 
-using Base.IteratorsMD: CartesianIndices
+# using Base.IteratorsMD: CartesianIndices
 
-# enum(grid::PGrid) = (
-#     QP((c[1],c[2]), grid[c]) for c in CartesianIndices((length(grid.g1), length(grid.g2)))
-# )
 
 enum(grid::PGrid) = (
     QP((c[1],c[2]), grid[c...]) for c in Iterators.product(1:length(grid.g1), 1:length(grid.g2))
 )
 
 
-using ResumableFunctions
+# using ResumableFunctions
 
-# enum(object::PGrid) = EELM(object)
-# Base.iterate(elm::EELM{T,V,O}) where T where V where O <: PGrid = (((1,1),elm.value), elm.index)
-# Base.iterate(elm::EELM{T,V,O}, state) where T where V where O <: PGrid = let 
-#     it = Base.iterate(elm.object, state)
-#     if it===nothing
-#         return nothing
-#     else
-#         v,ns = it
-#         return ((state[1:2],v), ns)
-#     end
+# struct C{d,d1,d2}
+#     grid::PGrid{SGrid{d1}, CGrid{d2},d}
+#     it::CartesianIndices{d}
 # end
 
-struct C{d,d1,d2}
-    grid::PGrid{SGrid{d1}, CGrid{d2},d}
-    it::CartesianIndices{d}
-end
+# eltype(cc::C) = eltype(cc.grid)
+# length(cc::C) = length(cc.grid)
+# C(grid) = C(grid, CartesianIndices((length(grid.g1), length(grid.g2))))
 
-eltype(cc::C) = eltype(cc.grid)
-length(cc::C) = length(cc.grid)
-C(grid) = C(grid, CartesianIndices((length(grid.g1), length(grid.g2))))
+# function iterate(cc::C)
+#     v, i = iterate(cc.it)
+#     return ( ((i[1],i[2]),cc.grid[i]) , i)
+# end
 
-function iterate(cc::C)
-    v, i = iterate(cc.it)
-    return ( ((i[1],i[2]),cc.grid[i]) , i)
-end
+# function iterate(cc::C, i)
+#     r = iterate(cc.it, i)
+#     if r===nothing
+#         return r
+#     end
+#     i = r[2]
+#     return ( ((i[1],i[2]),cc.grid[i]) , i)
+# end
 
-function iterate(cc::C, i)
-    r = iterate(cc.it, i)
-    if r===nothing
-        return r
-    end
-    i = r[2]
-    return ( ((i[1],i[2]),cc.grid[i]) , i)
-end
-
-enum4(grid::PGrid) = C(grid)
+# enum4(grid::PGrid) = C(grid)
 
 
-import Base: eachindex
+# import Base: eachindex
 
-eachindex(grid::PGrid{SGrid{d1}, CGrid{d2},d}) where d1 where d2 where d = ((c[1],c[2]) for c in CartesianIndices((length(grid.g1), length(grid.g2))))
+# eachindex(grid::PGrid{SGrid{d1}, CGrid{d2},d}) where d1 where d2 where d = ((c[1],c[2]) for c in CartesianIndices((length(grid.g1), length(grid.g2))))
