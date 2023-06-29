@@ -195,7 +195,6 @@ end
 # compat call
 function discretize(space::CSpace, d::Dict)
     k = get(d, :n, DEFAULT_GRID_NPOINTS)
-    @show k
     discretize(space, k)
 end
 

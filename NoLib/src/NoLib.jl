@@ -67,8 +67,8 @@ module NoLib
     include("model.jl")
     include("funs.jl")
     include("simul.jl")
+    include("time_iteration_log.jl")
     include("time_iteration.jl")
-
     include("time_iteration_accelerated.jl")
     include("vfi.jl")
     include("utils.jl")

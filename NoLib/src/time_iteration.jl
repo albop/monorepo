@@ -39,7 +39,6 @@ F(model, controls::GArray, φ::Union{GArray, DFun}) =
         ],
     )
 
-# using LoopVectorization
 function F!(out, model, controls::GArray, φ::Union{GArray, DFun})
     for n in 1:length(model.grid)
         ind = NoLib.from_linear(model.grid, n)
@@ -118,6 +117,7 @@ function time_iteration_workspace(dmodel; interp_mode=:linear)
     )
     φ = DFun(dmodel.model.states, x0; interp_mode=interp_mode)
     return (;x0, x1, x2, r0, dx, J, φ)
+
 end
 
 function newton_workspace(model; interp_mode=:linear)
@@ -129,10 +129,41 @@ function newton_workspace(model; interp_mode=:linear)
     return res
 end
 
+function time_iteration(model::YModel; kwargs...)
+    discr_options = get(kwargs, :discretization, Dict())
+    interp_mode = get(kwargs, :interpolation, :cubic)
+    dmodel = discretize(model, discr_options...)
+    wksp = time_iteration_workspace(dmodel; interp_mode=interp_mode)
+    kwargs2 = pairs(NamedTuple( k=>v for (k,v) in kwargs if !(k in (:discretization, :interpolation))))
+    time_iteration(dmodel, wksp; kwargs2...)
+end
 
-function time_iteration(model, workspace=time_iteration_workspace(model);
-    T=500, K=10, tol_ε=1e-8, tol_η=1e-6, verbose=false, improve=false, interp_mode=:cubic, engine=:none
-    )
+function time_iteration(model::DYModel,
+    workspace=time_iteration_workspace(model);
+    T=500,
+    K=10,
+    tol_ε=1e-8,
+    tol_η=1e-6,
+    verbose=true,
+    trace=false,
+    improve=false,
+    engine=:none
+)
+
+    if verbose | trace
+
+        log = IterationLog(
+            it = ("n", Int),
+            err =  ("ϵₙ=|F(xₙ,xₙ)|", Float64),
+            sa =  ("ηₙ=|xₙ-xₙ₋₁|", Float64),
+            lam = ("λₙ=ηₙ/ηₙ₋₁",Float64),
+            elapsed = ("Time", Float64)
+        )    
+        if verbose
+            initialize(log, verbose=verbose; message="Time Iteration")
+        end
+
+    end
 
     # mem = typeof(workspace) <: Nothing ? time_iteration_workspace(model) : workspace
     mbsteps = 5
