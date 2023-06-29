@@ -1,10 +1,18 @@
 module NoLib
 
+    # include("./stupid.jl")
+
+    # import .Stupid
+
+    
+    # import .DoModel
+
     import Base: eltype
     # using LabelledArrays
     using StaticArrays
     using ForwardDiff
-    
+    using Printf
+
     import LinearAlgebra: cross, norm, ×
 
     include("splines/splines.jl")
@@ -61,7 +69,7 @@ module NoLib
 
     include("misc.jl")
     include("space.jl")
-    include("grids.jl")
+    include("grids.jl")   
     include("processes.jl")
     include("garray.jl")
     include("model.jl")
@@ -74,12 +82,17 @@ module NoLib
     include("utils.jl")
 
 
+    include("../../DoModel/src/DoModel.jl")
+
     # WIP heterogenous agents
     # include("hetag.jl")
     # include("hetag_ss.jl")
     # include("jac.jl")
     # include("gauss_elim.jl")
 
+    function yaml_import(filename)
+        DoModel.DoloModel(filename)
+    end
 
     module build
         using NoLib: transition, arbitrage

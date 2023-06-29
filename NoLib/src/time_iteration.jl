@@ -169,10 +169,14 @@ function time_iteration(model::DYModel,
     mbsteps = 5
     lam = 0.5
 
+    local η_0 = NaN
+
     (;x0, x1, x2, dx, r0, J, φ) = workspace
 
     for t=1:T
         
+        t1 = time_ns()
+
         NoLib.fit!(φ, x0)
 
         if engine==:cpu
@@ -234,7 +238,15 @@ function time_iteration(model::DYModel,
         end
 
         η = distance(x0, x1)
-        verbose ? println("$t: $ε : $η: ") : nothing
+        gain = η/η_0
+        η_0 = η
+
+        # verbose ? println("$t: $ε : $η: ") : nothing
+
+        elapsed = time_ns() - t1
+        elapsed /= 1000000000
+
+        verbose ? append!(log; verbose=verbose, it=t, err=ε, sa=η, lam=gain, elapsed=elapsed) : nothing
 
         if !(improve)
 
@@ -261,6 +273,8 @@ function time_iteration(model::DYModel,
 
 
     end
+
+    verbose ? finalize(log, verbose=verbose) : nothing
 
     return (;solution=x0, message="No Convergence") # The only allocation when workspace is preallocated
 

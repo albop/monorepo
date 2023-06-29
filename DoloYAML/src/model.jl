@@ -29,6 +29,7 @@ mutable struct Model{ID, Dom, P} <: AbstractModel{Dom}
     domain::Dom
     factories
     definitions
+    filename::String
 
 
 end
@@ -59,6 +60,7 @@ end
 function Model(url::AbstractString; print_code=false)
     
     fname = basename(url)
+
     # typ = check_exogenous_domain_type(data)
     # it looks like it would be cool to use the super constructor ;-)
     if match(r"(http|https):.*", url) != nothing
@@ -70,12 +72,12 @@ function Model(url::AbstractString; print_code=false)
     data = Dolang.yaml_node_from_string(txt)
     # domain = det_domain(data, states, calib)
     # fspace = ProductDomain(typ, typeof())
-    return Model(data)
+    return Model(data, fname)
 
 end
 
 
-function Model(data::YAML.Node)
+function Model(data::YAML.Node, filename)
 
     id = gensym()
 
@@ -100,7 +102,8 @@ function Model(data::YAML.Node)
         exogenous,
         domain,
         nothing,
-        nothing
+        nothing,
+        filename
     )
 
     create_factories!(model)

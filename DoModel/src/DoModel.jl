@@ -1,18 +1,19 @@
 module DoModel
 
+    include("../../DoloYAML/src/DoloYAML.jl")
 
-    import DoloYAML
+    # import DoloYAML
 
     const Dolo = DoloYAML
 
-    import NoLib
-    import NoLib: transition, arbitrage, complementarities
-    import NoLib: discretize
+    import ..NoLib
+    import ..NoLib: transition, arbitrage, complementarities
+    import ..NoLib: discretize
+    using ..NoLib: CartesianSpace, GridSpace, ×, SGrid, CGrid
+    import ..NoLib: ⫫,⟂
+    
     using StaticArrays
-    using NoLib: CartesianSpace, GridSpace, ×, SGrid, CGrid
-    import NoLib: ⫫,⟂
-
-
+    
 
     function DoloModel(filename)
 
@@ -318,7 +319,6 @@ module DoModel
         -r
 
     end
-
 
 end # module DoloModel
 
