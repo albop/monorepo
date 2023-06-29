@@ -211,9 +211,7 @@ function Base.rand(mv::MvNormal{names, 1}) where names
     return SVector(randn()*sqrt(mv.Σ[1,1]))
 end
 
-
-function discretize(mv::MvNormal; n=5)
-
+function discretize(mv::MvNormal, n::Int=5)
     nn = [n for i=1:size(mv.Σ,1)]
     μ = zeros(size(mv.Σ,1))
     x, w = qnwnorm(nn, μ, Matrix(mv.Σ))
@@ -221,6 +219,8 @@ function discretize(mv::MvNormal; n=5)
     xm = SVector((SVector(x[i,:]...) for i=1:n)...)
     (;x=xm,w=SVector(w...))
 end
+
+discretize(mv::MvNormal, d::Dict) = length(d)>=1 ? discretize(mv,get(d,:n)) : discretize(mv)
 
 
 struct VAR1{names,V,B}
@@ -253,7 +253,7 @@ variables(::VAR1{names, ρ, Σ}) where names where ρ where Σ = names
 
 using Kronecker
 
-function discretize(var::VAR1; n=3)
+function discretize(var::VAR1, n::Int=3)
 
     names = variables(var)
 
@@ -295,6 +295,8 @@ function discretize(var::VAR1; n=3)
 
 end
 
+discretize(var::VAR1, d::Dict) = length(d)>=1 ? discretize(var, d[:n]) : discretize(var)
+
 struct MarkovChain{names, d, d2, k}
     P::SMatrix{d,d,Float64,d2}
     Q::SVector{d, SVector{k, Float64}}
@@ -316,4 +318,6 @@ MarkovChain(names, P::SMatrix, Q::SVector{d,SVector{k,Float64}}) where d where k
 
 MarkovProduct(mc::MarkovChain) = mc
 
+
+discretize(mc::MarkovChain, args...; kwargs...) = mc
 

@@ -80,9 +80,9 @@ exogenous:
 options:
     discretization:
         endo:
-            n: [10]
+            n: [12]
         exo:
-            n: 5
+            n: 6
     # interpolation: spline
 
 test: |

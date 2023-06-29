@@ -185,16 +185,27 @@ function discretize(space::CSpace{d}, n::NTuple{d, <:Int}) where d
     )
 end
 
+discretize(space::CSpace, n::Vector) = discretize(space, tuple(n...))
+
 function discretize(space::CSpace, n=DEFAULT_GRID_NPOINTS; nvals...)
     nn = tuple( ( get(nvals, v, n)   for v in variables(space) )...)
     discretize(space, nn)
+end
+
+# compat call
+function discretize(space::CSpace, d::Dict)
+    k = get(d, :n, DEFAULT_GRID_NPOINTS)
+    @show k
+    discretize(space, k)
 end
 
 #### 
 #### Discretize Grid Spaces
 ####
 
-
+function discretize(space::GSpace, args...; kwargs...)
+    SGrid(space.points)
+end
 
 #### 
 #### Discretize Product Spaces
@@ -219,7 +230,6 @@ function discretize(ps::ProductSpace{<:CSpace{d1}, <:CSpace{d2}}, n::Int) where 
 end
 
 function discretize(ps::ProductSpace; kwargs...)
-    println("J")
     ProductGrid(discretize(ps.spaces[1]; kwargs...), discretize(ps.spaces[2]; kwargs...))
 end
 

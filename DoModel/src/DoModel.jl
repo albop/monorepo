@@ -7,6 +7,7 @@ module DoModel
 
     import NoLib
     import NoLib: transition, arbitrage, complementarities
+    import NoLib: discretize
     using StaticArrays
     using NoLib: CartesianSpace, GridSpace, ×, SGrid, CGrid
     import NoLib: ⫫,⟂
@@ -87,13 +88,90 @@ module DoModel
             :anonymous
         end
 
-        # return (states, controls, exogenous)
-
         return NoLib.YModel(name, states, controls, exogenous, calibration, source)
 
+    end
 
-        # return DoloModel{ typeof(calibration), typeof(domain), typeof(P), typeof(source), Val(name)}(calibration, domain, P, source)
-        # transition
+
+    # function discretize(ym::NoLib.YModel{<:NoLib.MarkovChain,B,C,D,E}) where A where B where C where D where E<:DoloYAML.Model
+
+    function discretize(ym::NoLib.YModel{<:NoLib.MvNormal,B,C,D,E, F}; endo=nothing, exo=nothing) where B where C where D where E where F<:DoloYAML.Model
+
+        options = DoloYAML.get_options(ym.source)
+        discopts = get(options, :discretization, Dict())
+        if typeof(endo)<:Nothing
+            endo_opts = get(discopts, :endo, Dict())
+        else
+            endo_opts = endo
+        end
+        if typeof(exo)<:Nothing
+            exo_opts = get(discopts, :exo, Dict())
+        else
+            exo_opts = exo
+        end
+
+        dvar = discretize(ym.exogenous, exo_opts)
+        grid = discretize(ym.states, endo_opts)
+
+        return NoLib.DYModel(ym, grid, dvar)
+        
+    end
+    # only for VAR and MC
+
+
+    function discretize(ym::NoLib.YModel{<:NoLib.MarkovChain,B,C,D,E, F}; endo=nothing, exo=nothing) where B where C where D where E where F<:DoloYAML.Model
+
+        options = DoloYAML.get_options(ym.source)
+        discopts = get(options, :discretization, Dict())
+        if typeof(endo)<:Nothing
+            endo_opts = get(discopts, :endo, Dict())
+        else
+            endo_opts = endo
+        end
+        if typeof(exo)<:Nothing
+            exo_opts = get(discopts, :exo, Dict())
+        else
+            exo_opts = exo
+        end
+
+        dvar = discretize(ym.exogenous, exo_opts)
+        exo_grid = SGrid(dvar.Q)
+        endo_grid = discretize(ym.states.spaces[2], endo_opts)
+        grid = exo_grid × endo_grid
+        return NoLib.DYModel(ym, grid, dvar)
+        
+    end
+
+
+    function discretize(ym::NoLib.YModel{<:NoLib.VAR1,B,C,D,E, F}; endo=nothing, exo=nothing) where B where C where D where E where F<:DoloYAML.Model
+
+        options = DoloYAML.get_options(ym.source)
+        discopts = get(options, :discretization, Dict())
+        if typeof(endo)<:Nothing
+            endo_opts = get(discopts, :endo, Dict())
+        else
+            endo_opts = endo
+        end
+        if typeof(exo)<:Nothing
+            exo_opts = get(discopts, :exo, Dict())
+        else
+            exo_opts = exo
+        end
+
+        dvar = discretize(ym.exogenous, exo_opts)
+        exo_grid = SGrid(dvar.Q)
+        
+        d = NoLib.ndims(exo_grid)
+        min = ym.states.min[d+1:end]
+        max = ym.states.max[d+1:end]
+        println(endo_opts)
+        endo_grid = discretize(
+            NoLib.CSpace(min, max),
+            endo_opts
+        )
+        grid = exo_grid × endo_grid
+        return NoLib.DYModel(ym, grid, dvar)
+        
     end
 
     # only for VAR and MC

@@ -62,11 +62,11 @@ function discretize(model::YModel{<:VAR1})
     return DYModel(model, grid, dvar)
 end
 
-function discretize(model::YModel{<:MarkovChain})
-    dvar = (model.exogenous)
+function discretize(model::YModel{<:MarkovChain}; exo=Dict(), endo=Dict())
+    dvar = discretize(model.exogenous; exo...)
     exo_grid = SGrid(dvar.Q)
-    endo_grid = discretize(model.states.spaces[2])
+    endo_grid = discretize(model.states.spaces[2]; endo...)
     grid = exo_grid × endo_grid
-    return DYModel(model, grid, dvar)
+    return NoLib.DYModel(model, grid, dvar)
 end
 
