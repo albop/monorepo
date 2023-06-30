@@ -327,7 +327,9 @@ module DoModel
         p = model.source.parameters
         lb = Dolo.controls_lb(model.source, mm, ss_,  p)
 
-        return Ef .⫫ (x-lb)
+        r = (Ef .⫫ (x-lb)) 
+        r = (-r) .⫫ (ub-x)
+        -r
 
     end
 
@@ -346,8 +348,9 @@ module DoModel
         lb = Dolo.controls_lb(model.source, mm, ss_,  p)
         ub = Dolo.controls_ub(model.source, mm, ss_,  p)
 
-        return Ef .⫫ (x-lb)
-
+        r = Ef .⫫ (x-lb)
+        r = (-Ef) .⫫ (ub-x)
+        -r
     end
 
 

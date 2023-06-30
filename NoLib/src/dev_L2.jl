@@ -61,15 +61,22 @@ end
 function dF_2(dmodel, xx, φ)
 
     res = [
-            tuple(
-                (
-                    (;
-                        F_x=w*ForwardDiff.jacobian(u->NoLib.arbitrage(dmodel,s,x,S,u), φ(S)),
-                        S=S
-                    )
-                for (w,S) in NoLib.τ(dmodel, s, x)
+            let
+                r_F = ForwardDiff.jacobian(
+                    r->complementarities(dmodel.model, s,x,r),
+                    sum( w*arbitrage(dmodel,s,x,S,φ(S)) for (w,S) in τ(dmodel, s, x) ),
                 )
-           ...)
+                # println(r_F)
+                tuple(
+                    (
+                            (;
+                                F_x=w*r_F*ForwardDiff.jacobian(u->NoLib.arbitrage(dmodel,s,x,S,u), φ(S)),
+                                S=S
+                            )
+                    for (w,S) in NoLib.τ(dmodel, s, x)
+                    )
+                ...)
+            end
            for (s,x) in zip(NoLib.enum(dmodel.grid), xx) 
         ]
     

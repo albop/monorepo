@@ -6,6 +6,18 @@ using StaticArrays
 model = yaml_import("examples/ymodels/consumption_savings_iid.yaml");
 @time sol = time_iteration(model, verbose=false);
 
+sol = time_iteration(model, verbose=true, improve=true, trace=true, improve_wait=5);
+
+using Plots
+pl = plot()
+for t in sol.trace.data
+    tab = tabulate(model, t, :w)
+    plot!(pl, tab[V=:w], tab[V=:y])
+end
+pl
+
+
+
 
 
 @time res = NoLib.vfi(model, verbose=false);
@@ -14,10 +26,11 @@ model = yaml_import("examples/ymodels/consumption_savings_iid.yaml");
 
 @time res = NoLib.vfi(model, verbose=true, improve=true, improve_wait=5);
 
-res = NoLib.vfi(model, verbose=true, improve=true, interpolation=:cubic);
+@time res = NoLib.vfi(model, verbose=true, improve=true, improve_K=20, interpolation=:cubic);
+
 res
 
-res = NoLib.vfi(model, verbose=true, improve=true, interpolation=:linear);
+@time res = NoLib.vfi(model, verbose=true, improve=true, interpolation=:linear);
 res
 
 fun(x; y...) = x + length(y)
@@ -28,6 +41,7 @@ fun(0.3)
 
 tab = tabulate(model, res.drv, :w)
 
+using Plots
 plot(tab[V=:w], tab[V=:value])
 import NoLib.DoModel.DoloYAML
 

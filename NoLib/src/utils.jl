@@ -26,8 +26,8 @@ function tabulate(model::YModel, dr, key::Symbol, K=100, kwargs...)
     # vars = cat(variables(model.states)..., variables(model.controls)...; dims=1)
 
     vv = variables(dr)
-    if tyepof(vv)<:Symbol
-        vvv = (vv)
+    if typeof(vv)<:Symbol
+        vvv = (vv,)
     else
         vvv = vv
     end
