@@ -4,9 +4,10 @@ using Optim
 
 function Q(dmodel::DYModel, s, x, φv)
 
+    β = discount_factor(dmodel)
     r = reward(dmodel, s, x)
     contv = sum( w*φv(S)  for (w,S) in NoLib.τ(dmodel, s, x))
-    return r + p.β*contv
+    return r + β*contv
 
 end
 
@@ -29,14 +30,17 @@ end
 function Bellman_update(model, x0, φv)
 
     nx = deepcopy(x0)
-    nv = deepcopy(φv)
+    nv = deepcopy(φv.values)
 
     for (n,(s,x)) in enumerate(zip(enum( model.grid ),x0))
 
         # lb, ub = X(model, s)
-        lb, ub = bounds(model.model, s)
-        fun = u->-Q(model, s, SVector(u...), φv)
+        # φ = NoLib.DFun(dmodel, nx)
+        
+        lb, ub = bounds(model, s)
+        # fun = u->-Q(model, s, SVector(u...), φv)
         x_ = max.(min.(x, ub), lb)
+
         res = Optim.optimize(
             u->-Q(model, s, SVector(u...), φv),
             lb,
@@ -58,28 +62,42 @@ function Bellman_eval(model, x0, φv)
 end
 
 
-function vfi(model; verbose=true, improve=true, T=1000)
+function vfi(model; verbose=true, improve=true, trace=false, T=1000)
 
     nx = initial_guess(model)
+
     nv = GArray(model.grid, [1.0 for i=1:length(model.grid)])
+    φv = NoLib.DFun(model.grid, nv)
+
+    ti_trace = trace ? IterationTrace(typeof((;x=nx,v=φv))[]) : nothing
+
 
     for k=1:T
 
-        nx1,nv = Bellman_update(model, nx, nv)
+        # fit!(φv, nv)
+        φv = NoLib.DFun(model.grid, nv)
+
+        trace && push!( ti_trace.data, deepcopy((;x=nx,v=φv)) )
+
+
+        nx1,nv = Bellman_update(model, nx, φv)
+
         η_x = maximum((distance(a,b) for (a,b) in zip(nx1,nx)))
         verbose ? println(η_x) : nothing
         if η_x<1e-8
-            return (nx, nv)
+            return (nx, nv, ti_trace)
         end
         nx = nx1
-        if k >5 & improve
+        if (k > 5) & improve
             for n=1:50
-                nv = Bellman_eval(model, nx, nv)
+                φv = NoLib.DFun(model.grid, nv)
+                fit!(φv, nv)
+                nv = Bellman_eval(model, nx, φv)
             end
         end
     end
 
-    return nx, nv
+    return nx, nv, ti_trace
 end
 
 

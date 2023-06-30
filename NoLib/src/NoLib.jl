@@ -87,6 +87,8 @@ module NoLib
         DoModel.DoloModel(filename)
     end
 
+    export yaml_import, time_iteration, tabulate, discount_factor
+
     module build
         using NoLib: transition, arbitrage
         using NoLib: GSpace, CSpace

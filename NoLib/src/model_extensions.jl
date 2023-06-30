@@ -200,19 +200,30 @@ function transition(model::YModel{<:VAR1}, ss::SVector, xx::SVector)
 
 end
 
-function reward(model, s::QP, x::SVector)
+function reward(model::YModel, s::QP, x::SVector)
     return reward(model, s.val, x)
 end
 
 
 
-function reward(model, s_::SVector, x_::SVector)
+function reward(model::YModel, s_::SVector, x_::SVector)
             
-    ss = NamedTuple{model.variables(model.states)}(s_s)
-    xx = NamedTuple{model.variables(model.controls)}(x_)
+    ss = NamedTuple{variables(model.states)}(s_)
+    xx = NamedTuple{variables(model.controls)}(x_)
     return reward(model, ss, xx)
 
 end
+
+function reward(dmodel::DYModel, s::QP, x::SVector)
+
+    return reward(dmodel.model, s, x)
+
+end
+
+
+discount_factor(model::YModel) = model.calibration.β
+discount_factor(model::DYModel) = discount_factor(model.model)
+
 
 # function reward(model, s, x::SVector)
 

@@ -1,23 +1,74 @@
 using NoLib
 const Dolo=NoLib
+using StaticArrays
 
 
-model = NoLib.yaml_import("examples/ymodels/consumption_savings_iid.yaml");
-@time sol = NoLib.time_iteration(model, verbose=false);
+model = yaml_import("examples/ymodels/consumption_savings_iid.yaml");
+@time sol = time_iteration(model, verbose=false);
+
+
+
+
+
+import NoLib.DoModel.DoloYAML
+
+methods(NoLib.DoModel.DoloYAML.felicity)
 
 s0 = NoLib.draw(model.states)
+x = SVector(0.1)
 
-NoLib.bounds(model, s0)
+NoLib.reward(dmodel, s0, x)
+
+
+res = NoLib.vfi(dmodel)
+
+nx = NoLib.initial_guess(dmodel)
+nv = NoLib.GArray(dmodel.grid, [1.0 for i=1:length(dmodel.grid)])
+φ = NoLib.DFun(dmodel, nx)
+φv = NoLib.DFun(dmodel.grid, nv)
+
+
+NoLib.bounds(dmodel, s0, )
+NoLib.Q(dmodel, s0, x, φv)
+
+NoLib.Bellman_eval(dmodel, nx, φv)
+
 
 
 dmodel = NoLib.discretize(model)
 
-NoLib.vfi(dmodel)
+@time nx, nv, trace = NoLib.vfi(dmodel; verbose=true, improve=false, trace=true);
+
+using Plots
+
+pl = plot()
+for n=1:length(trace.data)
+    if mod(n,10)==0
+        x = trace.data[n].v.values
+        plot!(pl, [e for e in x.data])
+    end
+end
+pl
+
+pl = plot()
+for n=1:length(trace.data)
+    if mod(n,10)==0
+        x = trace.data[n].x
+        plot!(pl, [e[1] for e in x.data])
+    end
+end
+pl
 
 
+@time nx, nv, trace = NoLib.vfi(dmodel; verbose=true, improve=true, trace=true);
 
 
-φ = sol.dr
+@time NoLib.time_iteration(dmodel);
+
+@time NoLib.time_iteration(dmodel);
+
+# plot([e[1] for e in nx.data])
+
 
 # plotting the decision rule
 # inspecting iterations

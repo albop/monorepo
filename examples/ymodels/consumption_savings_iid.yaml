@@ -2,6 +2,7 @@ symbols:
     exogenous: [y]
     states: [w]
     controls: [c]
+    rewards: [rew]
     poststates: [a]
     expectations: [mr]
     parameters: [β, γ, σ, ρ, r, cbar]
@@ -13,6 +14,9 @@ equations:
 
     arbitrage: |
         β*( c[t+1]/c[t] )^(-γ)*r - 1  | 0<=c[t]<=w[t]
+
+    felicity: |
+        rew[t] = (c[t])^(1-γ)/(1-γ)
 
     half_transition: |
         w[t] = exp(y[t]) + a[t-1]*r
@@ -45,6 +49,8 @@ calibration:
     a: 0
     mr: 0
 
+    rew: 0.0
+
 domain:
     w: [0.5, 20.0]
 
@@ -56,6 +62,6 @@ exogenous:
 options:
     discretization:
         endo:
-            n: [1000]
+            n: [100]
         exo:
             n: 7

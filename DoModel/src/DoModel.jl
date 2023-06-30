@@ -7,7 +7,7 @@ module DoModel
     const Dolo = DoloYAML
 
     import ..NoLib
-    import ..NoLib: transition, arbitrage, complementarities, bounds
+    import ..NoLib: transition, arbitrage, complementarities, bounds, reward
     import ..NoLib: discretize
     using ..NoLib: CartesianSpace, GridSpace, ×, SGrid, CGrid
     import ..NoLib: ⫫,⟂
@@ -223,7 +223,7 @@ module DoModel
         return (m,s)
     end
 
-    function get_ms(model::NoLib.YModel{<:NoLib.MvNormal,B,C,D,E,sS}, s::SVector) where A where B where C where D where E where sS<:DoloYAML.Model
+    function get_ms(model::NoLib.YModel{<:NoLib.MvNormal,B,C,D,E,sS}, s::SVector) where B where C where D where E where sS<:DoloYAML.Model
         d = length(NoLib.variables(model.exogenous))
         n = length(NoLib.variables(model.states))
         m = SVector( (NaN64 for i=1:d)... )
@@ -288,8 +288,6 @@ module DoModel
 
         p = model.source.parameters
 
-        @show mm
-        @show ss_
         lb = Dolo.controls_lb(model.source, mm, ss_,  p)
         ub = Dolo.controls_ub(model.source, mm, ss_,  p)
 
@@ -297,6 +295,23 @@ module DoModel
 
 
     end
+
+
+    function reward(model::NoLib.YModel{A, B, C, D, E, sS}, ss::NoLib.QP, x::SVector) where A where B where C where D where E where sS<:DoloYAML.Model
+        
+
+        mm, ss_ = get_ms(model, ss.val)
+
+        p = model.source.parameters
+
+        rew = Dolo.felicity(model.source, mm, ss_, x, p)
+        
+
+        return rew[1]
+
+
+    end
+
 
 
     function complementarities(model::NoLib.YModel{<:NoLib.MarkovChain, B, C, D, E, sS}, ss::NoLib.QP, x::SVector, Ef::SVector) where B where C where D where E where sS<:DoloYAML.Model
@@ -355,6 +370,7 @@ module DoModel
         -r
 
     end
+
 
 
 end # module DoloModel
