@@ -1,5 +1,3 @@
-import Base: dims
-
 abstract type Space{d} end
 
 struct CartesianSpace{d,dims}
@@ -37,12 +35,10 @@ Base.in(e::SVector, cs) = all( ( (e[i]<=cs.max[i])&(e[i]>=cs.min[i]) for i=1:len
 # TODO: why is this not working?
 # dims(dom::CartesianSpace{d,dims}) where d where dims = dims
 
-ddims(dom::CartesianSpace{d,t}) where d where t = t
 
-dims(dom::CartesianSpace) = ddims(dom)
 ndims(dom::CartesianSpace{d, dims}) where d where dims = d
-
-variables(c::CartesianSpace) = dims(c)
+variables(dom::CartesianSpace{d,t}) where d where t = t
+dims(dom::CartesianSpace) = variables(dom)
 
 struct GridSpace{N,d,dims}
     points::SVector{N,SVector{d,Float64}}

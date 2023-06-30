@@ -7,7 +7,7 @@ module DoModel
     const Dolo = DoloYAML
 
     import ..NoLib
-    import ..NoLib: transition, arbitrage, complementarities
+    import ..NoLib: transition, arbitrage, complementarities, bounds
     import ..NoLib: discretize
     using ..NoLib: CartesianSpace, GridSpace, ×, SGrid, CGrid
     import ..NoLib: ⫫,⟂
@@ -215,12 +215,27 @@ module DoModel
 
     # end
 
+    function get_ms(model::NoLib.YModel{A,B,C,D,E,sS}, s::SVector) where A where B where C where D where E where sS<:DoloYAML.Model
+        d = length(NoLib.variables(model.exogenous))
+        n = length(NoLib.variables(model.states))
+        m = SVector( (s[i] for i=1:d)... )
+        s = SVector( (s[i] for i=(d+1):n)... )
+        return (m,s)
+    end
+
+    function get_ms(model::NoLib.YModel{<:NoLib.MvNormal,B,C,D,E,sS}, s::SVector) where A where B where C where D where E where sS<:DoloYAML.Model
+        d = length(NoLib.variables(model.exogenous))
+        n = length(NoLib.variables(model.states))
+        m = SVector( (NaN64 for i=1:d)... )
+        return (m,s)
+    end
+
+
     function arbitrage(model::NoLib.YModel{A,B,C,D,E,sS}, s::SVector, x::SVector, S::SVector, X::SVector) where A where B where C where D where E where sS<:DoloYAML.Model
 
         d = length(NoLib.variables(model.exogenous))
         n = length(NoLib.variables(model.states))
-        mm = SVector( (s[i] for i=1:d)... )
-        ss = SVector( (s[i] for i=(d+1):n)... )
+        mm,ss = get_ms(model, s)
         
         MM = SVector( (S[i] for i=1:d)...)
         SS = SVector( (S[i] for i=(d+1):n)...)
@@ -260,6 +275,27 @@ module DoModel
 
         return SVector(res...)
     
+    end
+
+    function bounds(model::NoLib.YModel{A, B, C, D, E, sS}, ss::NoLib.QP) where A where B where C where D where E where sS<:DoloYAML.Model
+        
+        s = ss.val
+
+        d = length(NoLib.variables(model.exogenous))
+        n = length(NoLib.variables(model.states))
+
+        mm, ss_ = get_ms(model, ss.val)
+
+        p = model.source.parameters
+
+        @show mm
+        @show ss_
+        lb = Dolo.controls_lb(model.source, mm, ss_,  p)
+        ub = Dolo.controls_ub(model.source, mm, ss_,  p)
+
+        return (lb, ub)
+
+
     end
 
 
@@ -319,6 +355,7 @@ module DoModel
         -r
 
     end
+
 
 end # module DoloModel
 

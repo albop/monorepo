@@ -11,7 +11,7 @@ YModel(N,A,B,C,D,S) = YModel{typeof(C),typeof(A),typeof(B),typeof(D),N,typeof(S)
 
 name(::YModel{C,A,B,D,N}) where C where A where B where D where N = N
 
-
+bounds(model::YModel, s) = model.controls
 
 get_states(model::YModel) = variables(model.states)
 get_controls(model::YModel) = variables(model.controls)
@@ -43,6 +43,9 @@ end
 
 name(dm::DYModel) = name(dm.model)
 
+bounds(dmodel::DYModel, s) = bounds(dmodel.model, s)
+
+
 function discretize(model::YModel{<:MvNormal})
     dist = discretize(model.exogenous)
     grid = discretize(model.states)
@@ -69,4 +72,3 @@ function discretize(model::YModel{<:MarkovChain}; exo=Dict(), endo=Dict())
     grid = exo_grid × endo_grid
     return NoLib.DYModel(model, grid, dvar)
 end
-

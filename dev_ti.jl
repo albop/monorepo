@@ -1,12 +1,12 @@
-import DoModel
 using NoLib
+const Dolo=NoLib
 
-model = DoModel.DoloModel("examples/ymodels/rbc_iid.yaml");
-NoLib.time_iteration(model)
+
+model = NoLib.yaml_import("examples/ymodels/rbc_iid.yaml");
+@time sol = NoLib.time_iteration(model, verbose=false, engine=:cpu);
 
 
 dmodel = NoLib.discretize(model)
-
 sol = NoLib.time_iteration(dmodel; verbose=true, interp_mode=:cubic)
 
 
@@ -28,12 +28,11 @@ model = include("examples/ymodels/rbc_iid.jl")
 dmodel = NoLib.discretize(model)
 NoLib.time_iteration(dmodel; verbose=true)
 
-import Dolo
+# import Dolo
 
-import DoModel
+using NoLib
 
-dolo_model = Dolo.yaml_import("examples/ymodels/rbc_mc.yaml")
-n_model = DoModel.DoloModel("examples/ymodels/rbc_mc.yaml")
+dolo_model = NoLib.yaml_import("examples/ymodels/rbc_mc.yaml")
+res = NoLib.time_iteration(dolo_model, verbose=true, improve=true);
+res = NoLib.time_iteration(dolo_model, verbose=true, improve=true, trace=true, T=2);
 
-@time Dolo.time_iteration(dolo_model);
-@time NoLib.time_iteration(n_model);

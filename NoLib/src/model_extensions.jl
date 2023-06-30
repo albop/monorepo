@@ -199,3 +199,23 @@ function transition(model::YModel{<:VAR1}, ss::SVector, xx::SVector)
     SVector(res...)
 
 end
+
+function reward(model, s::QP, x::SVector)
+    return reward(model, s.val, x)
+end
+
+
+
+function reward(model, s_::SVector, x_::SVector)
+            
+    ss = NamedTuple{model.variables(model.states)}(s_s)
+    xx = NamedTuple{model.variables(model.controls)}(x_)
+    return reward(model, ss, xx)
+
+end
+
+# function reward(model, s, x::SVector)
+
+#     return reward(model, SVector(s[2]), x)
+
+# end

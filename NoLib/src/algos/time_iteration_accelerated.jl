@@ -11,7 +11,7 @@ function F!(r, model, x, φ, ::CPU)
         i,j = c.I
 
         s_ = model.grid[i,j]
-        s = ((i,j), s_)
+        s = QP((i,j), s_)
         xx = x[i,j]
         
         rr = sum(
@@ -46,7 +46,7 @@ function dF_1!(out, model, controls::GArray, φ::Union{GArray, DFun}, ::CPU)
         i,j = c.I
 
         s_ = model.grid[i,j]
-        s = ((i,j), s_)
+        s = QP((i,j), s_)
         xx = x[i,j]
         
         rr = ForwardDiff.jacobian(u->F(model, s, u, φ), xx)

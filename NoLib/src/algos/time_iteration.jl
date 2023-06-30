@@ -97,7 +97,6 @@ function dF_2!(out::GArray, model, controls::GArray, φ::GArray, dφ::GArray)
     end
 end   
 
-include("dev_L2.jl")
 
 using LinearMaps
 
@@ -150,34 +149,34 @@ function time_iteration(model::DYModel,
     engine=:none
 )
 
-    if verbose | trace
-
-        log = IterationLog(
+    log = IterationLog(
             it = ("n", Int),
             err =  ("ϵₙ=|F(xₙ,xₙ)|", Float64),
             sa =  ("ηₙ=|xₙ-xₙ₋₁|", Float64),
             lam = ("λₙ=ηₙ/ηₙ₋₁",Float64),
             elapsed = ("Time", Float64)
         )    
-        if verbose
-            initialize(log, verbose=verbose; message="Time Iteration")
-        end
-
-    end
+    initialize(log, verbose=verbose; message="Time Iteration")
 
     # mem = typeof(workspace) <: Nothing ? time_iteration_workspace(model) : workspace
     mbsteps = 5
     lam = 0.5
-
+    
     local η_0 = NaN
-
+    convergence = false
+    iterations = T
+    
     (;x0, x1, x2, dx, r0, J, φ) = workspace
+    ti_trace = trace ? IterationTrace(typeof(φ)[]) : nothing
+
 
     for t=1:T
         
         t1 = time_ns()
 
         NoLib.fit!(φ, x0)
+
+        trace && push!(ti_trace.data, deepcopy(φ))
 
         if engine==:cpu
             F!(r0, model, x0, φ, CPU())
@@ -189,7 +188,9 @@ function time_iteration(model::DYModel,
         ε = norm(r0)
 
         if ε<tol_ε
-            return (;message="Solution found", solution=x0, n_iterations=t, dr=φ)
+            convergence = true
+            iterations = t
+            break
         end
 
         # solve u->F(u,x0) 
@@ -237,6 +238,7 @@ function time_iteration(model::DYModel,
 
         end
 
+
         η = distance(x0, x1)
         gain = η/η_0
         η_0 = η
@@ -274,10 +276,16 @@ function time_iteration(model::DYModel,
 
     end
 
-    verbose ? finalize(log, verbose=verbose) : nothing
+    verbose ?  finalize(log, verbose=verbose) : nothing
 
-    return (;solution=x0, message="No Convergence") # The only allocation when workspace is preallocated
-
+    TimeIterationResult(
+        φ,
+        iterations,
+        tol_η,
+        η_0,
+        log,
+        ti_trace
+    )
 end
 
 

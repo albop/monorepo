@@ -1,4 +1,3 @@
-using Formatting
 
 struct IterationLog
     header::Array{String, 1}
@@ -100,30 +99,28 @@ end
 ###
 
 
-mutable struct IterationTrace
-    trace::Array{Any,1}
+struct IterationTrace
+    data::Array{Any,1}
 end
+
+length(t::IterationTrace) = length(t.data)
 
 
 mutable struct TimeIterationResult
     dr
     iterations::Int
-    complementarities::Bool
-    dprocess
-    x_converged::Bool
-    x_tol::Float64
-    err::Float64
+    tol_η::Float64
+    η::Float64
     log::IterationLog
     trace::Union{Nothing,IterationTrace}
 end
 
-converged(r::TimeIterationResult) = r.x_converged
+converged(r::TimeIterationResult) = (r.η<r.tol_η)
 function Base.show(io::IO, r::TimeIterationResult)
     @printf io "Results of Time Iteration Algorithm\n"
-    @printf io " * Complementarities: %s\n" string(r.complementarities)
-    @printf io " * Discretized Process type: %s\n" string(typeof(r.dprocess))
+    # @printf io " * Complementarities: %s\n" string(r.complementarities)
     @printf io " * Decision Rule type: %s\n" string(typeof(r.dr))
     @printf io " * Number of iterations: %s\n" string(r.iterations)
-    @printf io " * Convergence: %s\n" converged(r)
-    @printf io "   * |x - x'| < %.1e: %s\n" r.x_tol r.x_converged
+    @printf io " * Convergence: %s\n" converged(r) ? "true" : RED_FG("false")
+    @printf io "   * |x - x'| < %.1e: %s\n" r.tol_η converged(r)
 end

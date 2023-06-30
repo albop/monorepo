@@ -2,11 +2,10 @@
 using Optim
 
 
-function Q(model, s, x, φv)
+function Q(dmodel::DYModel, s, x, φv)
 
-    p = model.calibration.p
-    r = reward(model, s, x)
-    contv = sum( w*φv(S)  for (w,S) in NoLib.τ(model, s, x))
+    r = reward(dmodel, s, x)
+    contv = sum( w*φv(S)  for (w,S) in NoLib.τ(dmodel, s, x))
     return r + p.β*contv
 
 end
@@ -18,7 +17,7 @@ function X(model, s_::SVector)
     ss_ = NoLib.LVectorLike(model.calibration.s, s)
     ss = catl(mm_, ss_)
 
-    X(model, ss)
+    bounds(model, ss)
 
 end
 
@@ -34,13 +33,15 @@ function Bellman_update(model, x0, φv)
 
     for (n,(s,x)) in enumerate(zip(enum( model.grid ),x0))
 
-        lb, ub = X(model, s)
+        # lb, ub = X(model, s)
+        lb, ub = bounds(model.model, s)
         fun = u->-Q(model, s, SVector(u...), φv)
+        x_ = max.(min.(x, ub), lb)
         res = Optim.optimize(
             u->-Q(model, s, SVector(u...), φv),
             lb,
             ub,
-            Vector(x);
+            Vector(x_);
         )
 
         nx[n] = res.minimizer
@@ -97,23 +98,3 @@ end
 #     SLArray{Tuple{d},Float64,1,d,dims}(vec...)
 
 # end
-
-function reward(model, s_::SVector, x_::SVector)
-    
-    p = model.calibration.p
-    
-    m,s = NoLib.split_states(model, s_)
-    mm_ = NoLib.LVectorLike(model.calibration.m, m)
-    ss_ = NoLib.LVectorLike(model.calibration.s, s)
-    ss = catl(mm_, ss_)
-    xx = NoLib.LVectorLike(model.calibration.x, x_)
-
-    return reward(model, ss, xx, p)
-
-end
-
-function reward(model, s, x::SVector)
-
-    return reward(model, SVector(s[2]), x)
-
-end

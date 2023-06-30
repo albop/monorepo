@@ -220,7 +220,7 @@ function discretize(mv::MvNormal, n::Int=5)
     (;x=xm,w=SVector(w...))
 end
 
-discretize(mv::MvNormal, d::Dict) = length(d)>=1 ? discretize(mv,get(d,:n)) : discretize(mv)
+discretize(mv::MvNormal, d::Dict) = length(d)>=1 ? discretize(mv,d[:n]) : discretize(mv)
 
 
 struct VAR1{names,V,B}

@@ -2,16 +2,13 @@ module NoLib
 
     # include("./stupid.jl")
 
-    # import .Stupid
-
-    
-    # import .DoModel
-
     import Base: eltype
     # using LabelledArrays
     using StaticArrays
     using ForwardDiff
     using Printf
+    using Formatting
+    using Crayons.Box
 
     import LinearAlgebra: cross, norm, ×
 
@@ -74,21 +71,17 @@ module NoLib
     include("garray.jl")
     include("model.jl")
     include("funs.jl")
-    include("simul.jl")
-    include("time_iteration_log.jl")
-    include("time_iteration.jl")
-    include("time_iteration_accelerated.jl")
-    include("vfi.jl")
+    include("dev_L2.jl")
+    include("algos/simul.jl")
+    include("algos/results.jl")
+    include("algos/time_iteration.jl")
+    include("algos/time_iteration_accelerated.jl")
+    include("algos/vfi.jl")
     include("utils.jl")
 
 
     include("../../DoModel/src/DoModel.jl")
 
-    # WIP heterogenous agents
-    # include("hetag.jl")
-    # include("hetag_ss.jl")
-    # include("jac.jl")
-    # include("gauss_elim.jl")
 
     function yaml_import(filename)
         DoModel.DoloModel(filename)
