@@ -8,8 +8,27 @@ model = yaml_import("examples/ymodels/consumption_savings_iid.yaml");
 
 
 
+@time res = NoLib.vfi(model, verbose=false);
 
+@time res = NoLib.vfi(model, verbose=true, improve=true);
 
+@time res = NoLib.vfi(model, verbose=true, improve=true, improve_wait=5);
+
+res = NoLib.vfi(model, verbose=true, improve=true, interpolation=:cubic);
+res
+
+res = NoLib.vfi(model, verbose=true, improve=true, interpolation=:linear);
+res
+
+fun(x; y...) = x + length(y)
+
+fun(0.3; a=3.0)
+fun(0.3;)
+fun(0.3)
+
+tab = tabulate(model, res.drv, :w)
+
+plot(tab[V=:w], tab[V=:value])
 import NoLib.DoModel.DoloYAML
 
 methods(NoLib.DoModel.DoloYAML.felicity)
@@ -37,13 +56,15 @@ NoLib.Bellman_eval(dmodel, nx, φv)
 
 dmodel = NoLib.discretize(model)
 
-@time nx, nv, trace = NoLib.vfi(dmodel; verbose=true, improve=false, trace=true);
+res= NoLib.vfi(dmodel; verbose=true, improve=true, trace=true);
+
+trace = res.trace
 
 using Plots
 
 pl = plot()
 for n=1:length(trace.data)
-    if mod(n,10)==0
+    if mod(n,1)==0
         x = trace.data[n].v.values
         plot!(pl, [e for e in x.data])
     end

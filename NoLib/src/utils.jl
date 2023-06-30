@@ -23,7 +23,16 @@ function tabulate(model::YModel, dr, key::Symbol, K=100, kwargs...)
     end
     H = [SVector(e[1].loc..., e[2]...) for e in vals]
     M = vcat( (e' for e in H)... )
-    vars = cat(variables(model.states)..., variables(model.controls)...; dims=1)
+    # vars = cat(variables(model.states)..., variables(model.controls)...; dims=1)
+
+    vv = variables(dr)
+    if tyepof(vv)<:Symbol
+        vvv = (vv)
+    else
+        vvv = vv
+    end
+
+    vars = cat(variables(model.states)..., vvv...; dims=1)
     dd = Dict(
         key => rr,
         :V => vars

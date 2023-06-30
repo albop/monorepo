@@ -28,9 +28,10 @@ struct DFun{Dom, Gar, Itp, vars}
 end
 
 vars(::DFun{D,G,I,vs}) where D where G where I where vs = vs
+variables(::DFun{D,G,I,vs}) where D where G where I where vs = vs
 
 
-DFun(domain, values, itp, vars) = DFun{typeof(domain), typeof(values), typeof(itp), Val{vars}}(domain, values, itp)
+DFun(domain, values, itp, vars) = DFun{typeof(domain), typeof(values), typeof(itp), vars}(domain, values, itp)
 function DFun(domain, values, itp)
     if eltype(values) <: Number
         vars = :y
@@ -43,7 +44,8 @@ function DFun(domain, values, itp)
 end
 # DFun(domain, values, itp) = begin @assert ndims(domain)==1 ; DFun(domain, values, itp, (:y,)) end
 # works for cartesian only
-function DFun(states, values::GVector{G,V}; interp_mode=:linear) where V where G<:CGrid
+function DFun(states, values::GVector{G,V}, vars=nothing; interp_mode=:linear) where V where G<:CGrid
+
     vv = reshape(values.data, (e[3] for e in values.grid.ranges)...)
     if interp_mode == :linear
         itp = SplineInterpolator(values.grid.ranges; values=vv, k=1)
@@ -52,7 +54,18 @@ function DFun(states, values::GVector{G,V}; interp_mode=:linear) where V where G
     else
         throw("Unkown interpolation mode $(interp_mode)")
     end
-    return DFun(states, values, itp)
+
+    if typeof(vars) <: Nothing
+        if eltype(values) <: Number
+            vars = :y
+        elseif eltype(values) <: SVector # && length(eltype(values)) == 1
+            vars = (:y,)
+        else
+            println(values)
+        end
+    end
+
+    return DFun(states, values, itp, vars)
 end
 
 function DFun(states, values::GVector{G,V}; interp_mode=:linear) where V where G<:PGrid{G1,G2} where G1<:SGrid where G2<:CGrid

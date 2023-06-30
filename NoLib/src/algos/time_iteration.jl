@@ -140,9 +140,11 @@ end
 function time_iteration(model::DYModel,
     workspace=time_iteration_workspace(model);
     T=500,
-    K=10,
+    improve_K=10,
+    improve_wait=10,
     tol_ε=1e-8,
     tol_η=1e-6,
+    max_bsteps=10,
     verbose=true,
     trace=false,
     improve=false,
@@ -199,7 +201,7 @@ function time_iteration(model::DYModel,
 
         x1.data .= x0.data
 
-        for k=1:10
+        for k=1:max_bsteps
 
             if engine==:cpu
                 F!(r0, model, x1,  φ, CPU())
@@ -250,11 +252,7 @@ function time_iteration(model::DYModel,
 
         verbose ? append!(log; verbose=verbose, it=t, err=ε, sa=η, lam=gain, elapsed=elapsed) : nothing
 
-        if !(improve)
-
-            x0.data .= x1.data
-            
-        else
+        if improve && k>improve_wait
             # x = T(x)
             # x1 = T(x0)
             # x - x1 = -T'(x) (x - x0)
@@ -268,11 +266,11 @@ function time_iteration(model::DYModel,
             Tp = J_1 \ J_2
             r = x1 - Tp * x0
 
-            x0 = neumann(Tp, r; K=1000)
+            x0 = neumann(Tp, r; K=improve_K)
             x1.data .= x0.data
-
+        else
+            x0.data .= x1.data
         end
-
 
     end
 

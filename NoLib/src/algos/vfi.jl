@@ -1,7 +1,6 @@
 
 using Optim
 
-
 function Q(dmodel::DYModel, s, x, φv)
 
     β = discount_factor(dmodel)
@@ -11,34 +10,15 @@ function Q(dmodel::DYModel, s, x, φv)
 
 end
 
-function X(model, s_::SVector)
-
-    m,s = NoLib.split_states(model, s_)
-    mm_ = NoLib.LVectorLike(model.calibration.m, m)
-    ss_ = NoLib.LVectorLike(model.calibration.s, s)
-    ss = catl(mm_, ss_)
-
-    bounds(model, ss)
-
-end
-
-function X(model, s::Tuple)
-    X(model, s[2])
-end
-
-
-function Bellman_update(model, x0, φv)
+function Bellman_update(model, x0::GVector, φv)
 
     nx = deepcopy(x0)
     nv = deepcopy(φv.values)
 
     for (n,(s,x)) in enumerate(zip(enum( model.grid ),x0))
-
-        # lb, ub = X(model, s)
-        # φ = NoLib.DFun(dmodel, nx)
         
         lb, ub = bounds(model, s)
-        # fun = u->-Q(model, s, SVector(u...), φv)
+
         x_ = max.(min.(x, ub), lb)
 
         res = Optim.optimize(
@@ -56,26 +36,41 @@ function Bellman_update(model, x0, φv)
 
 end
 
-function Bellman_eval(model, x0, φv)
+function Bellman_eval(model, x0::GVector, φv)
     data = [Q(model, s, x, φv)  for (s,x) in zip(enum( model.grid ),x0)]
     GVector(model.grid,data)
 end
 
 
-function vfi(model; verbose=true, improve=true, trace=false, T=1000)
+function vfi(model::YModel; kwargs...)
+    discr_options = get(kwargs, :discretization, Dict())
+    dmodel = discretize(model, discr_options...)
+    kwargs2 = pairs(NamedTuple( k=>v for (k,v) in kwargs if !(k in (:discretization,))))
+    vfi(dmodel; kwargs2...)
+end
+
+
+function vfi(model::DYModel; verbose=true, improve=false, improve_wait=-1, improve_K=50, trace=false, tol_η_x=1e-8, T=1000, interpolation=:cubic)
+
+    t0 = time_ns()
 
     nx = initial_guess(model)
 
     nv = GArray(model.grid, [1.0 for i=1:length(model.grid)])
-    φv = NoLib.DFun(model.grid, nv)
+    φv = NoLib.DFun(model.grid, nv, :value; interp_mode=interpolation)
 
     ti_trace = trace ? IterationTrace(typeof((;x=nx,v=φv))[]) : nothing
 
+    log = ValueIterationLog()
+    initialize(log, verbose=verbose)
+    
+    local kmax, η_x
 
     for k=1:T
 
-        # fit!(φv, nv)
-        φv = NoLib.DFun(model.grid, nv)
+        t1 = time_ns()
+
+        fit!(φv, nv)
 
         trace && push!( ti_trace.data, deepcopy((;x=nx,v=φv)) )
 
@@ -83,36 +78,38 @@ function vfi(model; verbose=true, improve=true, trace=false, T=1000)
         nx1,nv = Bellman_update(model, nx, φv)
 
         η_x = maximum((distance(a,b) for (a,b) in zip(nx1,nx)))
-        verbose ? println(η_x) : nothing
-        if η_x<1e-8
-            return (nx, nv, ti_trace)
+
+        if η_x<tol_η_x
+            kmax = k
+            elapsed = time_ns() - t1
+            append!(log; verbose=verbose, it=k, sa_x=η_x, sa_v=NaN, time=elapsed, nit=NaN)
+            break
         end
         nx = nx1
-        if (k > 5) & improve
-            for n=1:50
-                φv = NoLib.DFun(model.grid, nv)
+
+        it_eval = 0
+        if improve && (k > improve_wait)
+            for n=1:improve_K
+                it_eval +=1
                 fit!(φv, nv)
                 nv = Bellman_eval(model, nx, φv)
             end
         end
+
+
+        elapsed = time_ns() - t1
+        append!(log; verbose=verbose, it=k, sa_x=η_x, sa_v=NaN, time=elapsed, nit=it_eval)
+
     end
 
-    return nx, nv, ti_trace
+    finalize(log, verbose=verbose)
+    
+    φ = NoLib.DFun(model.grid, nx; interp_mode=interpolation)
+
+    total_time = time_ns() - t0
+    
+    ValueIterationResult(φ, φv, kmax,  tol_η_x, η_x, NaN, NaN, log, ti_trace)
+
 end
 
 
-
-# # function catl(a::SLArray{Tuple{d1},Float64,1,d1,dims1}, b::SLArray{Tuple{d2},Float64,1,d2,dims2})
-# function catl(a::SLArray, b::SLArray)
-    
-#     sa = LabelledArrays.symbols(a)
-#     sb = LabelledArrays.symbols(b)
-
-#     dims = tuple(sa..., sb...)
-#     vec = SVector(a..., b...)
-
-#     d = length(dims)
-    
-#     SLArray{Tuple{d},Float64,1,d,dims}(vec...)
-
-# end

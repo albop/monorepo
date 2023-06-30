@@ -33,7 +33,7 @@ function mul!(dr, L2::LL, x)
         t0 = dr[n]*0.0
         for k=1:length(D[n])
             (;F_x, S) = D[n][k]
-            t0 += F_x*dφ(S)
+            t0 += F_x*dφ(S) # TODO : add back complementarity
         end
         dr[n] = t0
     end
