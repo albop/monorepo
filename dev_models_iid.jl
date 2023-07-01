@@ -8,7 +8,7 @@ using NoLib: GVector
 using NoLib
 using StaticArrays
 
-model = include("rbc_iid.jl")
+model = include("examples/ymodels/rbc_iid.jl")
 
 @assert isbits(model_iid)
 
@@ -64,5 +64,8 @@ xx = NoLib.initial_guess(dmodel)
 r0 = NoLib.F(dmodel, xx, φ)
 
 @time NoLib.time_iteration(dmodel; verbose=false);
+
+
+@time NoLib.time_iteration(dmodel; verbose=true, improve=true, improve_wait=0);
 
 

@@ -66,7 +66,6 @@ function dF_2(dmodel, xx, φ)
                     r->complementarities(dmodel.model, s,x,r),
                     sum( w*arbitrage(dmodel,s,x,S,φ(S)) for (w,S) in τ(dmodel, s, x) ),
                 )
-                # println(r_F)
                 tuple(
                     (
                             (;
@@ -221,8 +220,10 @@ convert(::Type{BlockDiagonal}, ga::GArray{G, Vector{T}}) where T where G = Block
 
 
 convert(::Type{Matrix}, L::LF) = convert(Matrix, convert(LinearMap,L))
+
 convert(::Type{LinearMap}, L::LF) = let
-    elt = eltype(L.M_ij)
+    # elt = eltype(L.D[1][1].F_x)
+    elt = typeof(L.D[1][1].F_x)
     p,q = size(elt)
     N = length(L.grid)
     typ = SVector{q, Float64}

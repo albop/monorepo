@@ -13,8 +13,8 @@ F(model, s, x::SVector, φ::Policy) = let
          for (w,S) in τ(model, s, x)
     )
     # r
-    complementarities(model.model, s,x,r)
-    # r
+    r = complementarities(model.model, s,x,r)
+    r
 end
 
 
@@ -25,8 +25,8 @@ F(model, s, x::SVector, φ::Union{GArray, DFun}) = let
          for (w,S) in τ(model, s, x)
     )
     # r
-    complementarities(model.model, s,x,r)
-    # r
+    r = complementarities(model.model, s,x,r)
+    r
 end
 
 
@@ -140,7 +140,7 @@ end
 function time_iteration(model::DYModel,
     workspace=time_iteration_workspace(model);
     T=500,
-    improve_K=10,
+    improve_K=1000,
     improve_wait=10,
     tol_ε=1e-8,
     tol_η=1e-6,
@@ -243,16 +243,18 @@ function time_iteration(model::DYModel,
 
         η = distance(x0, x1)
         gain = η/η_0
-        η_0 = η
 
         # verbose ? println("$t: $ε : $η: ") : nothing
 
         elapsed = time_ns() - t1
         elapsed /= 1000000000
 
-        verbose ? append!(log; verbose=verbose, it=t, err=ε, sa=η, lam=gain, elapsed=elapsed) : nothing
+        verbose ? append!(log; verbose=verbose, it=t-1, err=ε, sa=η_0, lam=gain, elapsed=elapsed) : nothing
 
-        if improve && k>improve_wait
+        η_0 = η
+
+
+        if improve && t>improve_wait
             # x = T(x)
             # x1 = T(x0)
             # x - x1 = -T'(x) (x - x0)
@@ -306,7 +308,7 @@ function newton(model, workspace=newton_workspace(model);
         verbose ? println("$t: $ε") : nothing
 
         if ε<tol_ε
-            return (;message="Solution found", solution=x0, n_iterations=t, dr=φ)
+            return (;message="Solution found", solution=x0, n_iterations=t-1, dr=φ)
         end
 
         x1.data .= x0.data

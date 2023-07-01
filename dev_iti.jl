@@ -89,13 +89,28 @@ wksp = NoLib.time_iteration_workspace(dmodel);
 
 
 
-model = include("rbc_iid.jl")
+model = include("examples/ymodels/rbc_iid.jl")
 dmodel = NoLib.discretize(model)
 @time NoLib.time_iteration(dmodel; verbose=true);
 @time NoLib.time_iteration(dmodel; verbose=true, improve=true);
 
 
-model = include("rbc_ar1.jl")
+
+
+model = include("examples/ymodels/rbc_ar1.jl")
 dmodel = NoLib.discretize(model)
 @time NoLib.time_iteration(dmodel; verbose=false);
 @time NoLib.time_iteration(dmodel; verbose=false, improve=true);
+
+
+model = include("examples/ymodels/consumption_savings.jl")
+dmodel = NoLib.discretize(model)
+@time NoLib.time_iteration(dmodel; verbose=true);
+@time NoLib.time_iteration(dmodel; verbose=false, improve=true, improve_wait=0);
+
+
+
+model = yaml_import("examples/ymodels/consumption_savings_iid.yaml")
+dmodel = NoLib.discretize(model)
+@time NoLib.time_iteration(dmodel; verbose=true);
+@time NoLib.time_iteration(dmodel; verbose=true, improve=true, improve_wait=5);

@@ -13,7 +13,7 @@ using StaticArrays
 # mc  #
 #######
 
-model = include("rbc_mc.jl")
+model = include("examples/ymodels/rbc_mc.jl")
 
 
 s = rand(model.states)
@@ -70,7 +70,7 @@ L = NoLib.dF_2(dmodel, xx, φ)
 L*xx
 
 @time NoLib.time_iteration(dmodel; verbose=false, improve=true);
-@time NoLib.time_iteration(dmodel; verbose=true, improve=true);
+@time NoLib.time_iteration(dmodel; verbose=true, improve=true, improve_K=1000, improve_wait=0);
 
 @time NoLib.time_iteration(dmodel; verbose=true);
 @time NoLib.time_iteration(dmodel; verbose=true);

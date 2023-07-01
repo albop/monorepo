@@ -3,10 +3,52 @@ const Dolo=NoLib
 using StaticArrays
 
 
-model = yaml_import("examples/ymodels/consumption_savings_iid.yaml");
-@time sol = time_iteration(model, verbose=false);
+model = yaml_import("examples/ymodels/rbc_ar1.yaml");
 
-sol = time_iteration(model, verbose=true, improve=true, trace=true, improve_wait=5);
+sol = time_iteration(model, verbose=true, improve=true, trace=false, improve_wait=0);
+
+s0 = NoLib.draw(model.states)
+x = SVector(0.1, 0.3)
+
+Ef = SVector(0.2, 0.4)
+NoLib.complementarities(model, s0, x, Ef)
+
+
+model = yaml_import("examples/ymodels/consumption_savings_iid.yaml");
+
+dmodel = NoLib.discretize(model)
+
+# x0 = NoLib.initial_guess(model)
+x0 = NoLib.initial_guess(dmodel)
+φ = NoLib.DFun(dmodel, x0)
+
+r0 = NoLib.F(dmodel, x0, φ)
+r1 = NoLib.F(dmodel, x0, φ)
+
+xx0 = NoLib.ravel(x0)
+
+fun(u) = let
+    x = NoLib.unravel(x0, u)
+    NoLib.ravel(NoLib.F(dmodel, x, NoLib.DFun(dmodel, x)))
+end
+
+fun(xx0)
+
+using FiniteDiff
+
+matf = FiniteDiff.finite_difference_jacobian(fun,xx0)
+
+
+L = NoLib.dF_2(dmodel, x0, φ)
+matL2 = convert(Matrix, NoLib.dF_2(dmodel, x0, φ))
+matL = convert(Matrix, L)
+
+
+# heatmap(matf - matL)
+
+
+
+sol = time_iteration(model, verbose=true, improve=true, trace=true);
 
 using Plots
 pl = plot()

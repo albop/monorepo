@@ -15,9 +15,10 @@ module NoLib
     include("splines/splines.jl")
     using .splines: interp
     
+
     ⟂(a,b) = min(a,b)
     function ⫫(u,v)
-        sq = sqrt(u^2+v^2)/2
+        sq = sqrt(u^2+v^2)
         p =   (v<Inf ? (u+v-sq)/2 : u)
         return p
     end
